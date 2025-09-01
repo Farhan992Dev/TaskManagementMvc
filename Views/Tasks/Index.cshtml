@@ -67,12 +67,12 @@
     /* Trello-like board layout */
     .kanban-container {
         display: flex;
-        gap: 16px;
+        gap: 12px;
         align-items: flex-start;
-        height: calc(100vh - 220px);
-        max-height: 820px;
+        height: calc(100vh - 140px);
+        max-height: calc(100vh - 140px);
         overflow-x: auto;
-        padding-bottom: 12px;
+        padding-bottom: 8px;
         scrollbar-width: thin;
     }
     
@@ -91,7 +91,7 @@
     }
     
     .column-header {
-        padding: 20px;
+        padding: 12px;
         background: #f8f9fa;
         border-bottom: 1px solid #e9ecef;
         display: flex;
@@ -110,67 +110,17 @@
         margin: 0;
     }
     
-    .column-count {
-        background: #e9ecef;
-        color: #6c757d;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 4px 8px;
-        border-radius: 12px;
-        min-width: 24px;
-        text-align: center;
-    }
     
-    .column-hours {
-        background: rgba(108, 117, 125, 0.1);
-        color: #6c757d;
-        font-size: 11px;
-        font-weight: 500;
-        padding: 3px 6px;
-        border-radius: 8px;
-        margin-right: 4px;
-        display: inline-flex;
-        align-items: center;
-        gap: 2px;
-    }
-    
-    .column-hours i {
-        font-size: 10px;
-    }
     
     .column-body {
         flex: 1;
-        padding: 16px;
+        padding: 12px;
         overflow-y: auto;
         overflow-x: hidden;
-        max-height: calc(100vh - 300px);
+        max-height: none;
     }
 
-    .column-top {
-        padding: 12px 12px 0 12px;
-        background: #fff;
-    }
-
-    /* Quick add card */
-    .quick-add-trigger {
-        width: 100%;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border: none;
-        background: #f8f9fa;
-        color: #495057;
-        border-radius: 10px;
-        padding: 8px 10px;
-        font-weight: 600;
-        transition: all .15s ease;
-    }
-    .quick-add-trigger:hover { background: #eef1f6; color: #212529; }
-    .quick-add-form { display: none; }
-    .quick-add-form.active { display: block; }
-    .quick-add-input { border-radius: 10px; }
-    .quick-add-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-    .quick-add-actions .btn { padding: .4rem .8rem; border-radius: 10px; }
+    
     
     /* Scrollbar styling */
     .column-body::-webkit-scrollbar {
@@ -227,6 +177,48 @@
         transition: all 0.15s ease;
     }
 </style>
+
+<!-- Minimal filter header -->
+<style>
+    /* Minimal board tweaks */
+    .page-header { display: none !important; }
+    .column-top, .column-hours, .column-count, .btn-new-task { display: none !important; }
+    .column-header { justify-content: flex-start; }
+    .page-filter { background: transparent; border-radius: 12px; padding: 8px; margin-bottom: 8px; border: none; box-shadow: none; }
+    .page-filter .filter-bar { display:flex; align-items:center; gap:12px; }
+    .page-filter .bi-search { color:#6366f1; font-size:20px; }
+    #taskFilter { font-size: 16px; }
+    /* Hide legacy extras in DOM */
+    .column-top, .column-hours, .column-count, .btn-new-task { display: none !important; }
+</style>
+
+<div class="page-filter">
+    @Html.AntiForgeryToken()
+    <div class="filter-bar">
+        <i class="bi bi-search"></i>
+        <input id="taskFilter" type="text" class="form-control form-control-lg" placeholder="فیلتر تسک‌ها..." oninput="filterTasks(this.value)">
+    </div>
+    </div>
+
+<style>
+    /* Make more room for the board on this page only */
+    /* Hide sidebar off-canvas on all widths, but allow opening */
+    .sidebar { transform: translateX(100%) !important; transition: transform .2s ease !important; }
+    .sidebar.open { transform: translateX(0) !important; }
+    /* Keep main content full width */
+    main.app-main { padding-top: 8px !important; padding-bottom: 0 !important; margin-right: 0 !important; }
+    footer { display: none !important; }
+    .container { max-width: 100% !important; }
+    /* Always show the floating toggle button on this page */
+    .sidebar-toggle-mobile { display: inline-flex !important; }
+    .sidebar-toggle-mobile.btn { box-shadow: 0 6px 18px rgba(0,0,0,.15); }
+</style>
+
+<!-- Floating menu toggle + overlay for this page -->
+<button type="button" class="btn btn-primary sidebar-toggle-mobile" id="openSidebarBtn" title="منو">
+    <i class="bi bi-list"></i>
+  </button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <div class="page-header">
     @Html.AntiForgeryToken()
@@ -287,13 +279,7 @@
                 <i class="bi bi-pause-circle column-icon column-icon-not-started"></i>
                 شروع نشده
             </h3>
-            <div>
-                <span class="column-hours">
-                    <i class="bi bi-clock"></i>
-                    <span class="hours-value">@(notStartedHours.ToString("0.##"))</span>
-                </span>
-                <span class="column-count">@notStartedTasks.Count</span>
-            </div>
+            
         </div>
         <div class="column-top">
             <button type="button" class="quick-add-trigger" onclick="toggleQuickAdd('NotStarted')">
@@ -324,11 +310,7 @@
                 در حال انجام
             </h3>
             <div>
-                <span class="column-hours">
-                    <i class="bi bi-clock"></i>
-                    <span class="hours-value">@(inProgressHours.ToString("0.##"))</span>
                 </span>
-                <span class="column-count">@inProgressTasks.Count</span>
             </div>
         </div>
         <div class="column-top">
@@ -360,11 +342,7 @@
                 تکمیل شده
             </h3>
             <div>
-                <span class="column-hours">
-                    <i class="bi bi-clock"></i>
-                    <span class="hours-value">@(completedHours.ToString("0.##"))</span>
                 </span>
-                <span class="column-count">@completedTasks.Count</span>
             </div>
         </div>
         <div class="column-top">
@@ -411,83 +389,30 @@
 @section Scripts {
     <script>
         // --- Vanilla JS (no jQuery) implementation ---
-        function toggleQuickAdd(status, open) {
-            const col = document.querySelector(`.kanban-column[data-status="${status}"]`);
-            if (!col) return;
-            const form = col.querySelector('.quick-add-form');
-            if (!form) return;
-            const input = form.querySelector('.quick-add-input');
-            const show = open === undefined ? !form.classList.contains('active') : open;
-            form.classList.toggle('active', show);
-            if (show) setTimeout(() => input && input.focus(), 0);
+        // Minimal text filter across all task cards
+        function filterTasks(q) {
+            const query = (q || '').toString().trim().toLowerCase();
+            const cards = document.querySelectorAll('.task-card');
+            cards.forEach(card => {
+                const text = (card.innerText || '').toLowerCase();
+                card.style.display = (query === '' || text.includes(query)) ? 'block' : 'none';
+            });
+            if (typeof refreshCounters === 'function') refreshCounters();
         }
 
-        function quickAddKeydown(e, status) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                submitQuickAdd(status);
-            } else if (e.key === 'Escape') {
-                toggleQuickAdd(status, false);
-            }
-        }
-
-        async function submitQuickAdd(status) {
-            const col = document.querySelector(`.kanban-column[data-status="${status}"]`);
-            if (!col) return;
-            const form = col.querySelector('.quick-add-form');
-            const input = form?.querySelector('.quick-add-input');
-            const perf = form?.querySelector('.quick-add-performer');
-            const hrs = form?.querySelector('.quick-add-hours');
-            const title = (input?.value || '').trim();
-            if (!title) { input && input.focus(); return; }
-
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-            const projectId = document.querySelector('.kanban-container')?.getAttribute('data-project-id');
-
-            const body = new FormData();
-            body.append('title', title);
-            body.append('status', status);
-            if (projectId) body.append('projectId', projectId);
-            if (token) body.append('__RequestVerificationToken', token);
-
-            const btn = form.querySelector('.btn.btn-primary');
-            if (btn) { btn.disabled = true; btn.textContent = 'در حال افزودن...'; }
-            let resp;
-            try {
-                resp = await fetch('@Url.Action("QuickCreate")', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        ...(token ? { 'RequestVerificationToken': token } : {})
-                    },
-                    body
-                });
-                if (!resp.ok) throw new Error('bad');
-                const html = await resp.text();
-                const bodyEl = col.querySelector('.column-body');
-                if (bodyEl) {
-                    // insert at top like Trello
-                    bodyEl.insertAdjacentHTML('afterbegin', html);
-                    refreshCounters();
-                    initDragAndDrop();
-                }
-                input.value = '';
-                input.focus();
-            } catch (e) {
-                if (e?.message === 'bad' && resp) {
-                    // try to detect common auth/antiforgery responses
-                    try {
-                        const text = await resp.text();
-                        const isAuth = resp.status === 401 || resp.status === 403;
-                        showNotification(isAuth ? 'دسترسی ایجاد تسک ندارید.' : 'خطا در افزودن کارت', isAuth ? 'warning' : 'error');
-                    } catch { showNotification('خطا در افزودن کارت', 'error'); }
-                } else {
-                    showNotification('خطا در افزودن کارت', 'error');
-                }
-            } finally {
-                if (btn) { btn.disabled = false; btn.textContent = 'افزودن'; }
-            }
-        }
+        // Sidebar open/close for this page (floating button)
+        (function () {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const btn = document.getElementById('openSidebarBtn');
+            if (!sidebar || !overlay || !btn) return;
+            const open = () => { sidebar.classList.add('open'); overlay.classList.add('active'); };
+            const close = () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); };
+            btn.addEventListener('click', open);
+            overlay.addEventListener('click', close);
+            // Close with Esc
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+        })();
         async function createTask() {
             try {
                 const resp = await fetch('@Url.Action("Create", new { projectId = ViewData["ProjectId"] })', {
@@ -664,7 +589,6 @@
                 });
                 
                 // به‌روزرسانی نمایش ساعت‌ها
-                const hoursValueElement = col.querySelector('.column-hours .hours-value');
                 if (hoursValueElement) {
                     hoursValueElement.textContent = totalHours.toFixed(2);
                 }
@@ -847,8 +771,7 @@
         // Minor UX: highlight drop targets
         const style = document.createElement('style');
         style.textContent = `.column-body.drag-over{background:rgba(0,123,255,.08);outline:2px dashed var(--bs-primary);outline-offset:-4px;border-radius:8px;transition:background .15s}`+
-            `.task-card.dragging{opacity:.5}`+
-            `.quick-add-input:focus{box-shadow:none}`;
+            `.task-card.dragging{opacity:.5}`;
         document.head.appendChild(style);
 
         // --- Inline edit: hours ---
@@ -937,3 +860,4 @@
         }
     </script>
 }
+
