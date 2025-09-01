@@ -1,0 +1,20 @@
+@model TaskManagementMvc.Models.Company
+
+<div class="container">
+    <h2>پروژه‌های شرکت: @Model.Name</h2>
+    <corp-table headers="نام,مدیر پروژه,وضعیت,اقدامات" striped hover small dense>
+        @foreach (var p in Model.Projects)
+        {
+            <tr>
+                <td>@p.Name</td>
+                <td>@p.ProjectManager?.FullName</td>
+                <td><corp-badge dense variant="info">@p.Status</corp-badge></td>
+                <td class="text-nowrap">
+                    <corp-btn dense size="sm" variant="secondary" icon="bi-pencil" asp-controller="Projects" asp-action="Edit" asp-route-id="@p.Id">ویرایش</corp-btn>
+                </td>
+            </tr>
+        }
+    </corp-table>
+</div>
+
+

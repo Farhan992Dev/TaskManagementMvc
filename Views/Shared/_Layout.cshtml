@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - سیستم مدیریت تسک</title>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Bootstrap RTL (CDN) -->
+    <link href="https://unpkg.com/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Persian Webfont -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Unified Design System (theme tokens, components) -->
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <!-- Existing styles kept for compatibility with current components -->
+    <link rel="stylesheet" href="~/css/mizito.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/corp-input.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/corp-button.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/corp-components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @{
+        var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+        var action = ViewContext.RouteData.Values["Action"]?.ToString();
+        var isHome = controller == "Home" && action == "Index";
+        var isAuthLanding = controller == "Account" && (action == "Login" || action == "AccessDenied" || action == "Register" || action == "RegisterStep1" || action == "RegisterStep2" || action == "RegisterStep3");
+    }
+
+    @* Sidebar is hidden on home page and authentication pages *@
+    @if (!isHome && !isAuthLanding)
+    {
+        @await Html.PartialAsync("_Sidebar")
+    }
+
+    @if (isHome || isAuthLanding)
+    {
+        <main class="py-0">
+            @RenderBody()
+        </main>
+    }
+    else
+    {
+        <main class="py-5 app-main">
+            <div class="container">
+                @* Optional standardized page header (use ViewData["Title"], ViewData["Subtitle"], and optional @section PageActions) *@
+                @if (ViewData["Title"] != null || IsSectionDefined("PageActions"))
+                {
+                    <div class="page-header">
+                        <div>
+                            @if (ViewData["Title"] != null)
+                            {
+                                <h1 class="page-title">@ViewData["Title"]</h1>
+                            }
+                            @if (ViewData["Subtitle"] != null)
+                            {
+                                <p class="page-subtitle mb-0">@ViewData["Subtitle"]</p>
+                            }
+                        </div>
+                        <div class="page-actions">
+                            @RenderSection("PageActions", required: false)
+                        </div>
+                    </div>
+                }
+
+                <div class="row">
+                    <div class="col-12">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+        </main>
+    }
+
+    <footer class="py-5 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="brand-icon">
+                            <i class="bi bi-kanban-fill"></i>
+                        </div>
+                        <h5 class="mb-0 fw-bold">سیستم مدیریت تسک</h5>
+                    </div>
+                    <p class="text-muted mb-4">
+                        سیستم مدیریت تسک پیشرفته برای تیم‌های حرفه‌ای. مدیریت پروژه‌ها، تسک‌ها و تیم‌ها با ابزارهای مدرن و رابط کاربری زیبا.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" title="فیسبوک"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-link" title="توییتر"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="social-link" title="لینکدین"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="social-link" title="اینستاگرام"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold mb-3">پشتیبانی</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="footer-link">مرکز راهنما</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">تماس با ما</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">گزارش مشکل</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">درخواست ویژگی</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold mb-3">محصولات</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="footer-link">مدیریت پروژه</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">مدیریت تسک</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">گزارش‌گیری</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">API</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-4">
+                    <h6 class="fw-bold mb-3">خبرنامه</h6>
+                    <p class="text-muted mb-3">از آخرین اخبار و به‌روزرسانی‌ها مطلع شوید</p>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="ایمیل شما">
+                        <button class="btn btn-primary" type="button">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-muted">&copy; 2024 سیستم مدیریت تسک. تمامی حقوق محفوظ است.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="footer-link me-3">حریم خصوصی</a>
+                    <a href="#" class="footer-link me-3">شرایط استفاده</a>
+                    <a href="#" class="footer-link">نقشه سایت</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle -->
+    <script src="https://unpkg.com/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    @* Dark mode and theme toggle disabled per requirement *@
+    
+    <!-- SignalR Library -->
+    <script src="https://unpkg.com/@@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
+    
+    
+    <!-- Notification System -->
+    <script>
+        // Global notification manager
+        class NotificationManager {
+            constructor() {
+                this.connection = null;
+                this.isConnected = false;
+                this.notificationContainer = null;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    // Check if we have an existing global container
+                    if (window.globalNotificationContainer) {
+                        this.notificationContainer = window.globalNotificationContainer;
+                    } else {
+                        // Create notification container
+                        this.createNotificationContainer();
+                    }
+
+                    // Restore any persisted notifications from previous page
+                    this.restorePersistedNotifications();
+
+                    // Initialize SignalR connection
+                    this.connection = new signalR.HubConnectionBuilder()
+                        .withUrl("/notificationHub")
+                        .withAutomaticReconnect()
+                        .build();
+
+                    // Set up event handlers
+                    this.setupEventHandlers();
+
+                    // Start connection
+                    await this.startConnection();
+                } catch (error) {
+                    console.error('Failed to initialize notification manager:', error);
+                }
+            }
+
+            createNotificationContainer() {
+                // Always try to find existing container first
+                let container = document.getElementById('notification-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'notification-container';
+                    container.style.cssText = `
+                        position: fixed;
+                        bottom: 20px;
+                        left: 20px;
+                        z-index: 9999;
+                        max-width: 350px;
+                        pointer-events: none;
+                        transition: all 0.3s ease;
+                    `;
+                    
+                    // Insert at the very end of body to ensure it stays visible
+                    document.body.appendChild(container);
+                }
+                this.notificationContainer = container;
+                
+                // Store reference globally to persist across page changes
+                window.globalNotificationContainer = container;
+            }
+
+            setupEventHandlers() {
+                if (!this.connection) return;
+
+                this.connection.on("ReceiveNotification", (notification) => {
+                    console.log('Received notification:', notification);
+                    this.showNotification(notification);
+                });
+
+                this.connection.onclose(() => {
+                    this.isConnected = false;
+                    console.log('SignalR connection closed');
+                });
+
+                this.connection.onreconnected(() => {
+                    this.isConnected = true;
+                    console.log('SignalR connection restored');
+                });
+            }
+
+            async startConnection() {
+                try {
+                    await this.connection.start();
+                    this.isConnected = true;
+                    console.log('SignalR connection established');
+                } catch (error) {
+                    console.error('Failed to start SignalR connection:', error);
+                    this.isConnected = false;
+                }
+            }
+
+            showNotification(notification, duration = 10000) {
+                if (!this.notificationContainer) return;
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${this.getBootstrapType(notification.type)} alert-dismissible fade show notification-item`;
+                alertDiv.style.cssText = `
+                    pointer-events: auto;
+                    margin-bottom: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    border: none;
+                    border-radius: 8px;
+                `;
+
+                const icon = this.getNotificationIcon(notification.type);
+                const notificationId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                alertDiv.setAttribute('data-notification-id', notificationId);
+                
+                alertDiv.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <i class="${icon} me-2 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <strong>${notification.title || ''}</strong>
+                            <div>${notification.message}</div>
+                            ${notification.timestamp ? `<small class="text-muted">${new Date(notification.timestamp).toLocaleString('fa-IR')}</small>` : ''}
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+
+                this.notificationContainer.appendChild(alertDiv);
+
+                // Store notification in sessionStorage for persistence
+                this.storeNotificationForPersistence(notificationId, notification, duration);
+
+                // Auto-remove after specified duration
+                const timeoutId = setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                        this.removeStoredNotification(notificationId);
+                    }
+                }, duration);
+
+                // Store timeout ID for cleanup
+                alertDiv.setAttribute('data-timeout-id', timeoutId);
+            }
+
+            storeNotificationForPersistence(id, notification, duration) {
+                try {
+                    const stored = JSON.parse(sessionStorage.getItem('activeNotifications') || '{}');
+                    stored[id] = {
+                        notification: notification,
+                        duration: duration,
+                        startTime: Date.now()
+                    };
+                    sessionStorage.setItem('activeNotifications', JSON.stringify(stored));
+                } catch (e) {
+                    console.warn('Failed to store notification for persistence:', e);
+                }
+            }
+
+            removeStoredNotification(id) {
+                try {
+                    const stored = JSON.parse(sessionStorage.getItem('activeNotifications') || '{}');
+                    delete stored[id];
+                    sessionStorage.setItem('activeNotifications', JSON.stringify(stored));
+                } catch (e) {
+                    console.warn('Failed to remove stored notification:', e);
+                }
+            }
+
+            restorePersistedNotifications() {
+                try {
+                    const stored = JSON.parse(sessionStorage.getItem('activeNotifications') || '{}');
+                    const now = Date.now();
+                    
+                    Object.keys(stored).forEach(id => {
+                        const item = stored[id];
+                        const elapsed = now - item.startTime;
+                        const remaining = item.duration - elapsed;
+                        
+                        if (remaining > 0) {
+                            // Re-show notification with remaining time
+                            this.showNotification(item.notification, remaining);
+                        } else {
+                            // Remove expired notification
+                            delete stored[id];
+                        }
+                    });
+                    
+                    sessionStorage.setItem('activeNotifications', JSON.stringify(stored));
+                } catch (e) {
+                    console.warn('Failed to restore persisted notifications:', e);
+                }
+            }
+
+            getBootstrapType(type) {
+                const typeMap = {
+                    'success': 'success',
+                    'error': 'danger',
+                    'warning': 'warning',
+                    'info': 'info'
+                };
+                return typeMap[type] || 'info';
+            }
+
+            getNotificationIcon(type) {
+                const iconMap = {
+                    'success': 'bi bi-check-circle-fill',
+                    'error': 'bi bi-exclamation-triangle-fill',
+                    'warning': 'bi bi-exclamation-circle-fill',
+                    'info': 'bi bi-info-circle-fill'
+                };
+                return iconMap[type] || 'bi bi-info-circle-fill';
+            }
+
+            // Public method to send notifications programmatically
+            async sendNotification(message, type = 'info', title = '', duration = 10000) {
+                if (!this.isConnected) {
+                    console.warn('SignalR not connected, showing local notification');
+                    this.showNotification({ message, type, title, timestamp: new Date().toISOString() }, duration);
+                    return;
+                }
+
+                try {
+                    await this.connection.invoke("SendNotificationToAll", {
+                        message: message,
+                        type: type,
+                        title: title,
+                        timestamp: new Date().toISOString()
+                    });
+                } catch (error) {
+                    console.error('Failed to send notification:', error);
+                    this.showNotification({ message, type, title, timestamp: new Date().toISOString() }, duration);
+                }
+            }
+
+            getConnectionStatus() {
+                return {
+                    isConnected: this.isConnected,
+                    connectionState: this.connection?.connectionState || 'Disconnected'
+                };
+            }
+        }
+
+        // Initialize notification manager immediately
+        window.notificationManager = null;
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeNotificationManager);
+        } else {
+            initializeNotificationManager();
+        }
+
+        function initializeNotificationManager() {
+            // Don't create multiple instances
+            if (window.notificationManager && window.notificationManager.isConnected) {
+                console.log('NotificationManager already exists and is connected');
+                return;
+            }
+            
+            console.log('Initializing NotificationManager...');
+            window.notificationManager = new NotificationManager();
+            console.log('NotificationManager created:', window.notificationManager);
+        }
+
+        // Helper function for compatibility
+        function showNotification(message, type = 'info', title = '') {
+            if (window.notificationManager) {
+                window.notificationManager.sendNotification(message, type, title);
+            } else {
+                console.log('NotificationManager not ready yet. Queuing notification:', { message, type, title });
+                // Queue notification for when manager is ready
+                setTimeout(() => showNotification(message, type, title), 100);
+            }
+        }
+
+        // Global helper to check manager status
+        function getNotificationManagerStatus() {
+            if (window.notificationManager) {
+                return {
+                    exists: true,
+                    status: window.notificationManager.getConnectionStatus(),
+                    manager: window.notificationManager
+                };
+            }
+            return { exists: false, status: 'Not initialized' };
+        }
+
+        // Preserve notifications across page navigations
+        window.addEventListener('beforeunload', function() {
+            // Keep the notification container in DOM
+            if (window.globalNotificationContainer) {
+                // Move container to a higher level if needed
+                if (!document.body.contains(window.globalNotificationContainer)) {
+                    document.body.appendChild(window.globalNotificationContainer);
+                }
+            }
+        });
+
+        // Re-initialize manager on page load if needed
+        window.addEventListener('load', function() {
+            if (!window.notificationManager || !window.notificationManager.isConnected) {
+                console.log('Re-initializing NotificationManager after page load');
+                initializeNotificationManager();
+            }
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+    @RenderSection("Styles", required: false)
+</body>
+</html>

@@ -1,0 +1,51 @@
+@model TaskManagementMvc.Models.ViewModels.CompanyOverviewViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+<div class="container">
+    <h2>نمای کلی شرکت‌ها (ادمین)</h2>
+
+    <form asp-action="Overview" method="get" class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">انتخاب شرکت</label>
+            <select name="companyId" class="form-select" asp-items="@(new SelectList(Model.Companies, "Id", "Name", Model.SelectedCompanyId))">
+                <option value="">— انتخاب کنید —</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <corp-btn variant="primary" icon="bi-search" type="submit">نمایش</corp-btn>
+        </div>
+    </form>
+
+    @if (Model.SelectedCompanyId.HasValue)
+    {
+        <hr />
+        <h4 class="mt-3">پروژه‌ها</h4>
+        <corp-table headers="نام,مدیر پروژه,وضعیت,اقدامات" small striped dense>
+            @foreach (var p in Model.Projects)
+            {
+                <tr>
+                    <td>@p.Name</td>
+                    <td>@p.ProjectManager?.FullName</td>
+                    <td><corp-badge dense variant="info">@p.Status</corp-badge></td>
+                    <td class="text-nowrap"><corp-btn dense size="sm" variant="secondary" icon="bi-eye" asp-controller="Projects" asp-action="Edit" asp-route-id="@p.Id">جزئیات</corp-btn></td>
+                </tr>
+            }
+        </corp-table>
+
+        <h4 class="mt-4">تسک‌ها</h4>
+        <corp-table headers="عنوان,پروژه,انجام‌دهنده,وضعیت,ساعت" small dense>
+            @foreach (var t in Model.Tasks)
+            {
+                <tr>
+                    <td>@t.Title</td>
+                    <td>@t.Project?.Name</td>
+                    <td>@t.Performer?.Name</td>
+                    <td><corp-badge dense variant="secondary">@t.Status</corp-badge></td>
+                    <td>@t.Hours</td>
+                </tr>
+            }
+        </corp-table>
+    }
+</div>
+
+

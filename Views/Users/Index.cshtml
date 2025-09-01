@@ -1,0 +1,42 @@
+@model IEnumerable<TaskManagementMvc.Models.ViewModels.UserListViewModel>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">کاربران</h2>
+        <corp-btn asp-action="Create" icon="bi-person-plus" dense>ایجاد کاربر</corp-btn>
+    </div>
+    <corp-table headers="نام,نام کاربری,ایمیل,شرکت,وضعیت,نقش‌ها,عملیات" striped hover dense>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.FullName</td>
+                <td>@u.UserName</td>
+                <td>@u.Email</td>
+                <td>@(u.CompanyName ?? "نامشخص")</td>
+                <td>
+                    @if (u.IsActive)
+                    {
+                        <corp-badge variant="success" icon="bi-check-circle" dense>فعال</corp-badge>
+                    }
+                    else
+                    {
+                        <corp-badge variant="secondary" icon="bi-x-circle" dense>غیرفعال</corp-badge>
+                    }
+                </td>
+                <td>
+                    @foreach (var r in u.Roles)
+                    {
+                        <corp-badge variant="info" dense>@r</corp-badge>
+                    }
+                </td>
+                <td class="text-nowrap">
+                    <corp-btn asp-action="Details" asp-route-id="@u.Id" variant="secondary" icon="bi-eye" dense></corp-btn>
+                    <corp-btn asp-action="Edit" asp-route-id="@u.Id" variant="outline" icon="bi-pencil" dense></corp-btn>
+                    <corp-btn asp-action="ProjectAccess" asp-route-id="@u.Id" variant="info" icon="bi-shield-check" dense></corp-btn>
+                </td>
+            </tr>
+        }
+    </corp-table>
+</div>
+
+

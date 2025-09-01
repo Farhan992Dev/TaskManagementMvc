@@ -1,0 +1,20 @@
+@model TaskManagementMvc.Models.Project
+
+<div class="container">
+    <h2 class="mb-3">تسک‌های پروژه: <corp-badge variant="secondary" dense>@Model.Name</corp-badge></h2>
+    <corp-table headers="عنوان,وضعیت,ساعت" small striped hover dense>
+        @foreach (var t in Model.Tasks)
+        {
+            <tr>
+                <td>@t.Title</td>
+                <td>
+                    <corp-badge variant="outline" dense>@t.Status</corp-badge>
+                </td>
+                <td>@t.Hours</td>
+            </tr>
+        }
+    </corp-table>
+    <corp-btn variant="outline" icon="bi-arrow-right" asp-action="Edit" asp-route-id="@Model.Id" dense>بازگشت</corp-btn>
+</div>
+
+

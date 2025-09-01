@@ -1,0 +1,19 @@
+@model TaskManagementMvc.Models.Company
+
+<div class="container company-form">
+    <h2 class="mb-4 fw-bold">ویرایش شرکت</h2>
+    <form asp-action="Edit" method="post" class="corp-form corp-three-cols" novalidate>
+        <input type="hidden" asp-for="Id" />
+        <corp-input dense asp-for="Name" icon="bi-building" placeholder="نام شرکت"></corp-input>
+        <corp-input dense asp-for="Email" type="email" icon="bi-envelope" placeholder="ایمیل سازمانی"></corp-input>
+        <corp-input dense asp-for="Address" icon="bi-geo-alt" placeholder="آدرس"></corp-input>
+        <corp-input dense asp-for="Website" icon="bi-globe" placeholder="وب‌سایت (اختیاری)"></corp-input>
+    <corp-check dense asp-for="IsActive"></corp-check>
+        <div class="d-flex gap-2 mt-2">
+            <corp-btn dense variant="primary" icon="bi-save" type="submit">ذخیره</corp-btn>
+            <corp-btn dense variant="outline" icon="bi-arrow-right" asp-action="Index">بازگشت</corp-btn>
+        </div>
+    </form>
+</div>
+
+

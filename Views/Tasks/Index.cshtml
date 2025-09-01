@@ -1,0 +1,939 @@
+@model IEnumerable<TaskManagementMvc.Models.TaskItem>
+@using TaskManagementMvc.Models
+@using TaskStatusEnum = TaskManagementMvc.Models.TaskStatus;
+@{
+    ViewData["Title"] = "بورد مدیریت تسک‌ها";
+    var notStartedTasks = Model.Where(t => t.Status == TaskStatusEnum.NotStarted).ToList();
+    var inProgressTasks = Model.Where(t => t.Status == TaskStatusEnum.InProgress).ToList();
+    var completedTasks = Model.Where(t => t.Status == TaskStatusEnum.Completed).ToList();
+    
+    // محاسبه جمع ساعت‌ها برای هر ستون
+    var notStartedHours = notStartedTasks.Sum(t => t.Hours);
+    var inProgressHours = inProgressTasks.Sum(t => t.Hours);
+    var completedHours = completedTasks.Sum(t => t.Hours);
+
+    // Quick-add performers list provided by controller
+    var qaPerformers = ViewData["ModalPerformers"] as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+}
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+    
+    .page-header {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+    
+    .page-title {
+        color: #1a1a1a;
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .page-subtitle {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 8px 0 0 0;
+    }
+    
+    .btn-new-task {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-new-task:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+    
+    /* Trello-like board layout */
+    .kanban-container {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        height: calc(100vh - 220px);
+        max-height: 820px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+        scrollbar-width: thin;
+    }
+    
+    .kanban-column {
+        flex: 0 0 320px;
+        min-width: 320px;
+        max-width: 320px;
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    
+    .column-header {
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    
+    .column-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+    
+    .column-count {
+        background: #e9ecef;
+        color: #6c757d;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 12px;
+        min-width: 24px;
+        text-align: center;
+    }
+    
+    .column-hours {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 3px 6px;
+        border-radius: 8px;
+        margin-right: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+    }
+    
+    .column-hours i {
+        font-size: 10px;
+    }
+    
+    .column-body {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: calc(100vh - 300px);
+    }
+
+    .column-top {
+        padding: 12px 12px 0 12px;
+        background: #fff;
+    }
+
+    /* Quick add card */
+    .quick-add-trigger {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        background: #f8f9fa;
+        color: #495057;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-weight: 600;
+        transition: all .15s ease;
+    }
+    .quick-add-trigger:hover { background: #eef1f6; color: #212529; }
+    .quick-add-form { display: none; }
+    .quick-add-form.active { display: block; }
+    .quick-add-input { border-radius: 10px; }
+    .quick-add-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .quick-add-actions .btn { padding: .4rem .8rem; border-radius: 10px; }
+    
+    /* Scrollbar styling */
+    .column-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .column-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .column-body::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    
+    .column-body::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    .column-icon {
+        font-size: 16px;
+    }
+    
+    .column-icon-not-started { color: #ff6b6b; }
+    .column-icon-in-progress { color: #29b6f6; }
+    .column-icon-completed { color: #66bb6a; }
+    
+    /* Drag and Drop Styles */
+    .task-card {
+        cursor: grab;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .task-card:active {
+        cursor: grabbing;
+    }
+    
+    .task-card.dragging {
+        opacity: 0.5;
+        transform: scale(0.95);
+    }
+    
+    .column-body.drag-over {
+        background: rgba(99, 102, 241, 0.08);
+        border: 2px dashed #6366f1;
+        border-radius: 12px;
+        transition: all 0.15s ease;
+    }
+</style>
+
+<div class="page-header">
+    @Html.AntiForgeryToken()
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">
+                <i class="bi bi-kanban-fill" style="color: #6366f1;"></i>
+                بورد مدیریت تسک‌ها
+            </h1>
+            <p class="page-subtitle">
+                @{
+                    var projName = ViewData["Project"] is Project p ? p.Name : null;
+                    var projCode = ViewData["ProjectCode"]?.ToString();
+                }
+                @if (!string.IsNullOrEmpty(projName) || !string.IsNullOrEmpty(projCode))
+                {
+                    <text>پروژه @projName @if(!string.IsNullOrEmpty(projCode)){<span class="text-muted">(@projCode)</span>}</text>
+                }
+                else
+                {
+                    <text>نمای کلی وضعیت تسک‌ها و مدیریت سریع عملیات</text>
+                }
+            </p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <!-- فیلتر انجام‌دهنده -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="performerFilter" style="font-size: 14px; color: #6c757d; white-space: nowrap;">فیلتر انجام‌دهنده:</label>
+                <select id="performerFilter" class="form-select form-select-sm" style="min-width: 200px;" onchange="filterByPerformer()">
+                    <option value="">همه</option>
+                    @{
+                        var allPerformers = Model.Where(t => t.Performer != null)
+                                                .Select(t => t.Performer)
+                                                .DistinctBy(p => p.Id)
+                                                .OrderBy(p => p.FullName)
+                                                .ToList();
+                    }
+                    @foreach (var performer in allPerformers)
+                    {
+                        <option value="@performer.Id">@performer.FullName</option>
+                    }
+                </select>
+            </div>
+            <button type="button" class="btn-new-task" onclick="createTask()">
+                <i class="bi bi-plus"></i> تسک جدید
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="kanban-container" data-project-id="@ViewData["ProjectId"]">
+    <!-- شروع نشده -->
+    <div class="kanban-column" data-status="NotStarted">
+        <div class="column-header">
+            <h3 class="column-title">
+                <i class="bi bi-pause-circle column-icon column-icon-not-started"></i>
+                شروع نشده
+            </h3>
+            <div>
+                <span class="column-hours">
+                    <i class="bi bi-clock"></i>
+                    <span class="hours-value">@(notStartedHours.ToString("0.##"))</span>
+                </span>
+                <span class="column-count">@notStartedTasks.Count</span>
+            </div>
+        </div>
+        <div class="column-top">
+            <button type="button" class="quick-add-trigger" onclick="toggleQuickAdd('NotStarted')">
+                <i class="bi bi-plus-lg"></i>
+                افزودن کارت
+            </button>
+            <div class="quick-add-form" data-status="NotStarted">
+                <input type="text" class="form-control quick-add-input" placeholder="عنوان کارت جدید..." onkeydown="quickAddKeydown(event, 'NotStarted')">
+                <div class="quick-add-actions">
+                    <button type="button" class="btn btn-primary" onclick="submitQuickAdd('NotStarted')">افزودن</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="toggleQuickAdd('NotStarted', false)">انصراف</button>
+                </div>
+            </div>
+        </div>
+        <div class="column-body">
+            @foreach (var task in notStartedTasks)
+            {
+                await Html.RenderPartialAsync("_TaskCard", task);
+            }
+        </div>
+    </div>
+
+    <!-- در حال انجام -->
+    <div class="kanban-column" data-status="InProgress">
+        <div class="column-header">
+            <h3 class="column-title">
+                <i class="bi bi-arrow-repeat column-icon column-icon-in-progress"></i>
+                در حال انجام
+            </h3>
+            <div>
+                <span class="column-hours">
+                    <i class="bi bi-clock"></i>
+                    <span class="hours-value">@(inProgressHours.ToString("0.##"))</span>
+                </span>
+                <span class="column-count">@inProgressTasks.Count</span>
+            </div>
+        </div>
+        <div class="column-top">
+            <button type="button" class="quick-add-trigger" onclick="toggleQuickAdd('InProgress')">
+                <i class="bi bi-plus-lg"></i>
+                افزودن کارت
+            </button>
+            <div class="quick-add-form" data-status="InProgress">
+                <input type="text" class="form-control quick-add-input" placeholder="عنوان کارت جدید..." onkeydown="quickAddKeydown(event, 'InProgress')">
+                <div class="quick-add-actions">
+                    <button type="button" class="btn btn-primary" onclick="submitQuickAdd('InProgress')">افزودن</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="toggleQuickAdd('InProgress', false)">انصراف</button>
+                </div>
+            </div>
+        </div>
+        <div class="column-body">
+            @foreach (var task in inProgressTasks)
+            {
+                await Html.RenderPartialAsync("_TaskCard", task);
+            }
+        </div>
+    </div>
+
+    <!-- تکمیل شده -->
+    <div class="kanban-column" data-status="Completed">
+        <div class="column-header">
+            <h3 class="column-title">
+                <i class="bi bi-check-circle column-icon column-icon-completed"></i>
+                تکمیل شده
+            </h3>
+            <div>
+                <span class="column-hours">
+                    <i class="bi bi-clock"></i>
+                    <span class="hours-value">@(completedHours.ToString("0.##"))</span>
+                </span>
+                <span class="column-count">@completedTasks.Count</span>
+            </div>
+        </div>
+        <div class="column-top">
+            <button type="button" class="quick-add-trigger" onclick="toggleQuickAdd('Completed')">
+                <i class="bi bi-plus-lg"></i>
+                افزودن کارت
+            </button>
+            <div class="quick-add-form" data-status="Completed">
+                <input type="text" class="form-control quick-add-input" placeholder="عنوان کارت جدید..." onkeydown="quickAddKeydown(event, 'Completed')">
+                <div class="quick-add-actions">
+                    <button type="button" class="btn btn-primary" onclick="submitQuickAdd('Completed')">افزودن</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="toggleQuickAdd('Completed', false)">انصراف</button>
+                </div>
+            </div>
+        </div>
+        <div class="column-body">
+            @foreach (var task in completedTasks)
+            {
+                await Html.RenderPartialAsync("_TaskCard", task);
+            }
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Content will be loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Content will be loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // --- Vanilla JS (no jQuery) implementation ---
+        function toggleQuickAdd(status, open) {
+            const col = document.querySelector(`.kanban-column[data-status="${status}"]`);
+            if (!col) return;
+            const form = col.querySelector('.quick-add-form');
+            if (!form) return;
+            const input = form.querySelector('.quick-add-input');
+            const show = open === undefined ? !form.classList.contains('active') : open;
+            form.classList.toggle('active', show);
+            if (show) setTimeout(() => input && input.focus(), 0);
+        }
+
+        function quickAddKeydown(e, status) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitQuickAdd(status);
+            } else if (e.key === 'Escape') {
+                toggleQuickAdd(status, false);
+            }
+        }
+
+        async function submitQuickAdd(status) {
+            const col = document.querySelector(`.kanban-column[data-status="${status}"]`);
+            if (!col) return;
+            const form = col.querySelector('.quick-add-form');
+            const input = form?.querySelector('.quick-add-input');
+            const perf = form?.querySelector('.quick-add-performer');
+            const hrs = form?.querySelector('.quick-add-hours');
+            const title = (input?.value || '').trim();
+            if (!title) { input && input.focus(); return; }
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const projectId = document.querySelector('.kanban-container')?.getAttribute('data-project-id');
+
+            const body = new FormData();
+            body.append('title', title);
+            body.append('status', status);
+            if (projectId) body.append('projectId', projectId);
+            if (token) body.append('__RequestVerificationToken', token);
+
+            const btn = form.querySelector('.btn.btn-primary');
+            if (btn) { btn.disabled = true; btn.textContent = 'در حال افزودن...'; }
+            let resp;
+            try {
+                resp = await fetch('@Url.Action("QuickCreate")', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(token ? { 'RequestVerificationToken': token } : {})
+                    },
+                    body
+                });
+                if (!resp.ok) throw new Error('bad');
+                const html = await resp.text();
+                const bodyEl = col.querySelector('.column-body');
+                if (bodyEl) {
+                    // insert at top like Trello
+                    bodyEl.insertAdjacentHTML('afterbegin', html);
+                    refreshCounters();
+                    initDragAndDrop();
+                }
+                input.value = '';
+                input.focus();
+            } catch (e) {
+                if (e?.message === 'bad' && resp) {
+                    // try to detect common auth/antiforgery responses
+                    try {
+                        const text = await resp.text();
+                        const isAuth = resp.status === 401 || resp.status === 403;
+                        showNotification(isAuth ? 'دسترسی ایجاد تسک ندارید.' : 'خطا در افزودن کارت', isAuth ? 'warning' : 'error');
+                    } catch { showNotification('خطا در افزودن کارت', 'error'); }
+                } else {
+                    showNotification('خطا در افزودن کارت', 'error');
+                }
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'افزودن'; }
+            }
+        }
+        async function createTask() {
+            try {
+                const resp = await fetch('@Url.Action("Create", new { projectId = ViewData["ProjectId"] })', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!resp.ok) throw new Error();
+                const html = await resp.text();
+                const container = document.querySelector('#createTaskModal .modal-content');
+                container.innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('createTaskModal'));
+                modal.show();
+                setupTaskForm('#createTaskForm', '#createTaskModal');
+            } catch {
+                showNotification('خطا در بارگذاری فرم ایجاد تسک', 'error');
+            }
+        }
+
+        async function editTask(id) {
+            try {
+                const resp = await fetch('@Url.Action("Edit")/' + id, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!resp.ok) throw new Error();
+                const html = await resp.text();
+                const container = document.querySelector('#editTaskModal .modal-content');
+                container.innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('editTaskModal'));
+                modal.show();
+                setupTaskForm('#editTaskForm', '#editTaskModal');
+            } catch {
+                showNotification('خطا در بارگذاری فرم ویرایش', 'error');
+            }
+        }
+
+    function setupTaskForm(formSelector, modalSelector) {
+            const form = document.querySelector(formSelector);
+            if (!form) return;
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const formData = new FormData(form);
+        const url = form.getAttribute('action') || '@Url.Action("Create")';
+                // Anti-forgery token if present
+                const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
+                try {
+                    const resp = await fetch(url, { method: 'POST', body: formData, headers });
+                    const contentType = resp.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const json = await resp.json();
+                        if (json.success) {
+                            const modalEl = document.querySelector(modalSelector);
+                            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                            if (modalInstance) modalInstance.hide();
+                            showNotification(json.message || 'انجام شد', 'success');
+                            
+                            // بجای reload کامل، فقط بخش کانبان را بازخوانی کنیم
+                            await refreshKanbanBoard();
+                        } else {
+                            // Unexpected JSON without success
+                            showNotification('پاسخ نامعتبر سرور', 'error');
+                        }
+                    } else {
+                        // Assume HTML (possibly validation errors)
+                        const html = await resp.text();
+                        const container = document.querySelector(modalSelector + ' .modal-content');
+                        container.innerHTML = html;
+                        // re-bind
+                        setupTaskForm(formSelector, modalSelector);
+                    }
+                } catch {
+                    showNotification('خطا در ذخیره اطلاعات', 'error');
+                }
+            }, { once: true });
+        }
+
+        function showNotification(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+            const wrapper = document.createElement('div');
+            wrapper.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            wrapper.style.cssText = 'top:20px;right:20px;z-index:9999;min-width:300px;';
+            wrapper.innerHTML = `<i class="${icon} me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            document.body.appendChild(wrapper);
+            setTimeout(() => {
+                const alert = bootstrap.Alert.getOrCreateInstance(wrapper);
+                alert.close();
+            }, 5000);
+        }
+
+        // تابع بازخوانی بورد کانبان بدون reload کامل صفحه
+        async function refreshKanbanBoard() {
+            try {
+                const resp = await fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!resp.ok) throw new Error();
+                const html = await resp.text();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const newKanbanContainer = tempDiv.querySelector('.kanban-container');
+                if (newKanbanContainer) {
+                    const currentKanbanContainer = document.querySelector('.kanban-container');
+                    
+                    // پاک کردن event listeners قدیمی
+                    dragItem = null;
+                    dragOriginStatus = null;
+                    
+                    currentKanbanContainer.replaceWith(newKanbanContainer);
+                    
+                    // دوباره initialize کنیم
+                    initializeKanbanComponents();
+                    initializeDragAndDrop();
+                    
+                    // فیلتر فعلی را دوباره اعمال کنیم
+                    const performerFilter = document.querySelector('#performerFilter');
+                    if (performerFilter && performerFilter.value) {
+                        filterByPerformer(performerFilter.value);
+                    }
+                }
+            } catch {
+                // در صورت خطا، از reload استفاده کنیم
+                location.reload();
+            }
+        }
+
+        // تابع مقداردهی اولیه اجزای کانبان بعد از refresh
+        function initializeKanbanComponents() {
+            // دوباره تعریف متغیرهای کانبان
+            window.kanbanColumns = document.querySelectorAll('.kanban-column');
+            
+            // پاک کردن تمام attribute های قبلی برای اینکه دوباره تنظیم شوند
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.removeAttribute('data-drag-initialized');
+                card.removeAttribute('data-double-click-initialized');
+            });
+            document.querySelectorAll('.column-body').forEach(body => {
+                body.removeAttribute('data-drop-initialized');
+            });
+            
+            // دوباره محاسبه counters
+            refreshCounters();
+        }
+
+        // Clear modal content on hide (Bootstrap events without jQuery)
+        document.addEventListener('hidden.bs.modal', ev => {
+            if (ev.target && (ev.target.id === 'createTaskModal' || ev.target.id === 'editTaskModal')) {
+                const content = ev.target.querySelector('.modal-content');
+                if (content) content.innerHTML = '';
+            }
+        });
+
+    // ---- Drag & Drop Kanban ----
+        const kanbanColumns = document.querySelectorAll('.kanban-column');
+        let dragItem = null;
+        let dragOriginStatus = null;
+        let isUpdatingStatus = false; // Prevent multiple simultaneous requests
+        let pendingRequests = new Set(); // Track pending requests
+
+        function refreshCounters() {
+            const kanbanCols = document.querySelectorAll('.kanban-column');
+            kanbanCols.forEach(col => {
+                const body = col.querySelector('.column-body');
+                const visibleCards = body ? body.querySelectorAll('.task-card:not([style*="display: none"])') : [];
+                const count = visibleCards.length;
+                const badge = col.querySelector('.column-count');
+                if (badge) badge.textContent = count;
+                
+                // محاسبه جمع ساعت‌های تسک‌های نمایش داده شده
+                let totalHours = 0;
+                visibleCards.forEach(card => {
+                    const hours = parseFloat(card.getAttribute('data-hours') || '0');
+                    totalHours += hours;
+                });
+                
+                // به‌روزرسانی نمایش ساعت‌ها
+                const hoursValueElement = col.querySelector('.column-hours .hours-value');
+                if (hoursValueElement) {
+                    hoursValueElement.textContent = totalHours.toFixed(2);
+                }
+            });
+        }
+
+        function initDragAndDrop() {
+            // بازخوانی متغیر kanbanColumns برای عناصر جدید
+            const currentKanbanColumns = document.querySelectorAll('.kanban-column');
+            
+            // Remove existing event listeners to prevent duplicates
+            document.querySelectorAll('.task-card').forEach(card => {
+                if (card.dataset.dragInitialized === 'true') return;
+                card.dataset.dragInitialized = 'true';
+                
+                card.addEventListener('dragstart', e => {
+                    dragItem = card;
+                    dragOriginStatus = card.closest('.kanban-column')?.dataset.status;
+                    card.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', card.getAttribute('data-task-id'));
+                });
+                
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    dragItem = null;
+                    dragOriginStatus = null;
+                });
+                
+                // Add double-click event to open edit modal
+                card.addEventListener('dblclick', e => {
+                    e.preventDefault();
+                    const taskId = card.getAttribute('data-task-id');
+                    if (taskId) {
+                        editTask(taskId);
+                    }
+                });
+            });
+
+            currentKanbanColumns.forEach(column => {
+                const body = column.querySelector('.column-body');
+                if (!body || body.dataset.dropInitialized === 'true') return;
+                body.dataset.dropInitialized = 'true';
+                
+                body.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    body.classList.add('drag-over');
+                });
+                
+                body.addEventListener('dragleave', e => {
+                    if (e.target === body) body.classList.remove('drag-over');
+                });
+                
+                body.addEventListener('drop', e => {
+                    e.preventDefault();
+                    body.classList.remove('drag-over');
+                    if (!dragItem) return;
+                    
+                    const targetStatus = column.dataset.status;
+                    if (dragOriginStatus === targetStatus) return;
+                    
+                    const taskId = dragItem.getAttribute('data-task-id');
+                    
+                    // Check if this request is already pending
+                    const requestKey = `${taskId}-${targetStatus}`;
+                    if (pendingRequests.has(requestKey) || isUpdatingStatus) {
+                        return;
+                    }
+                    
+                    body.appendChild(dragItem);
+                    refreshCounters();
+                    updateTaskStatus(taskId, targetStatus, () => {
+                        // success toast already shown
+                    }, () => {
+                        // revert on failure
+                        const originCol = document.querySelector(`.kanban-column[data-status="${dragOriginStatus}"] .column-body`);
+                        if (originCol) originCol.appendChild(dragItem);
+                        refreshCounters();
+                    });
+                });
+            });
+        }
+
+        async function updateTaskStatus(id, newStatus, onOk, onFail) {
+            const requestKey = `${id}-${newStatus}`;
+            
+            // Prevent duplicate requests
+            if (pendingRequests.has(requestKey) || isUpdatingStatus) {
+                console.log('Request already pending, skipping:', requestKey);
+                return;
+            }
+            
+            isUpdatingStatus = true;
+            pendingRequests.add(requestKey);
+            
+            try {
+                // anti-forgery: attempt to read from any existing form token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const formData = new FormData();
+                formData.append('id', id);
+                formData.append('newStatus', newStatus);
+                if (token) formData.append('__RequestVerificationToken', token);
+                
+                const resp = await fetch('@Url.Action("ChangeStatus")', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                
+                if (!resp.ok) throw new Error();
+                const ct = resp.headers.get('content-type')||'';
+                if (ct.includes('application/json')) {
+                    const json = await resp.json();
+                    if (json.success) {
+                        // showNotification(json.message || 'وضعیت به‌روزرسانی شد', 'success');
+                        if (onOk) onOk();
+                        return;
+                    }
+                }
+                throw new Error();
+            } catch (error) {
+                console.error('Error updating task status:', error);
+                // showNotification('خطا در تغییر وضعیت', 'error');
+                if (onFail) onFail();
+            } finally {
+                // Clear the request tracking
+                setTimeout(() => {
+                    isUpdatingStatus = false;
+                    pendingRequests.delete(requestKey);
+                }, 500); // Small delay to prevent rapid successive calls
+            }
+        }
+
+        // Re-init drag after page load (initial cards rendered server-side)
+        initDragAndDrop();
+        refreshCounters();
+
+        // تابع initialize برای drag and drop
+        function initializeDragAndDrop() {
+            initDragAndDrop();
+        }
+
+        // تابع فیلتر بر اساس انجام‌دهنده
+        function filterByPerformer() {
+            const selectedPerformerId = document.getElementById('performerFilter').value;
+            const allTaskCards = document.querySelectorAll('.task-card');
+            
+            allTaskCards.forEach(card => {
+                if (selectedPerformerId === '') {
+                    // نمایش همه تسک‌ها
+                    card.style.display = 'block';
+                } else {
+                    // بررسی انجام‌دهنده تسک
+                    const cardPerformerId = card.getAttribute('data-performer-id');
+                    const shouldShow = cardPerformerId === selectedPerformerId;
+                    card.style.display = shouldShow ? 'block' : 'none';
+                }
+            });
+            
+            // بروزرسانی شمارنده‌ها
+            refreshCounters();
+        }
+
+        // Mutation observer to auto-bind new cards (after create without full reload in future enhancements)
+        const observer = new MutationObserver(muts => {
+            let needInit = false;
+            muts.forEach(m => {
+                m.addedNodes.forEach(n => {
+                    if (n.nodeType === 1 && n.classList.contains('task-card')) needInit = true;
+                });
+            });
+            if (needInit) {
+                initDragAndDrop();
+                refreshCounters();
+            }
+        });
+        document.querySelectorAll('.column-body').forEach(b => observer.observe(b, { childList: true }));
+
+        // Minor UX: highlight drop targets
+        const style = document.createElement('style');
+        style.textContent = `.column-body.drag-over{background:rgba(0,123,255,.08);outline:2px dashed var(--bs-primary);outline-offset:-4px;border-radius:8px;transition:background .15s}`+
+            `.task-card.dragging{opacity:.5}`+
+            `.quick-add-input:focus{box-shadow:none}`;
+        document.head.appendChild(style);
+
+        // --- Inline edit: hours ---
+        async function beginEditHours(id) {
+            const card = document.querySelector(`.task-card[data-task-id="${id}"]`);
+            if (!card) return;
+            const stat = card.querySelector('.stat-item-hours');
+            const display = stat?.querySelector('.hours-display');
+            if (!stat || !display) return;
+            const current = (display.textContent || '').replace(/[^0-9.]/g,'');
+            if (stat.querySelector('.hours-input')) return;
+            const input = document.createElement('input');
+            input.type = 'number'; input.min = '0'; input.step = '0.25';
+            input.className = 'form-control form-control-sm hours-input';
+            input.style.width = '90px'; input.value = current || '0';
+            const saveBtn = document.createElement('button');
+            saveBtn.type = 'button'; saveBtn.className = 'btn btn-success btn-sm ms-1'; saveBtn.textContent = 'ثبت';
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button'; cancelBtn.className = 'btn btn-outline-secondary btn-sm ms-1'; cancelBtn.textContent = 'لغو';
+            const oldHtml = display.outerHTML;
+            display.replaceWith(input);
+            stat.appendChild(saveBtn); stat.appendChild(cancelBtn);
+            input.focus();
+            const cleanup = () => { input.replaceWith(display); saveBtn.remove(); cancelBtn.remove(); };
+            cancelBtn.onclick = e => { e.stopPropagation(); cleanup(); };
+            saveBtn.onclick = async e => {
+                e.stopPropagation();
+                const v = parseFloat(input.value||'0');
+                if (Number.isNaN(v) || v < 0) { input.focus(); return; }
+                const ok = await submitSetHours(id, v);
+                if (ok) {
+                    display.textContent = v.toFixed(2) + ' ساعت';
+                    card.setAttribute('data-hours', v.toFixed(2));
+                    refreshCounters();
+                }
+                cleanup();
+            };
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') saveBtn.click();
+                if (e.key === 'Escape') cancelBtn.click();
+            });
+        }
+
+        async function submitSetHours(id, hours) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const body = new FormData(); body.append('id', id); body.append('hours', hours);
+            try {
+                const resp = await fetch('@Url.Action("SetHours")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { 'RequestVerificationToken': token } : {}) }, body });
+                if (!resp.ok) throw new Error();
+                const json = await resp.json(); return !!json?.success;
+            } catch { showNotification('خطا در ثبت ساعت', 'error'); return false; }
+        }
+
+        // --- Inline assign: performer ---
+        function beginAssignPerformer(id) {
+            const card = document.querySelector(`.task-card[data-task-id="${id}"]`);
+            if (!card) return;
+            const wrapper = card.querySelector('.stat-item-performer');
+            const select = wrapper?.querySelector('.inline-performer-select');
+            if (!select) return;
+            select.classList.toggle('d-none');
+            if (!select.classList.contains('d-none')) select.focus();
+        }
+
+        async function submitAssignPerformer(id, performerId) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const body = new FormData(); body.append('id', id); if (performerId) body.append('performerId', performerId);
+            try {
+                const resp = await fetch('@Url.Action("SetPerformer")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', ...(token ? { 'RequestVerificationToken': token } : {}) }, body });
+                if (!resp.ok) throw new Error();
+                const json = await resp.json();
+                if (json?.success) {
+                    const card = document.querySelector(`.task-card[data-task-id="${id}"]`);
+                    const nameEl = card?.querySelector('.performer-name');
+                    const sel = card?.querySelector('.inline-performer-select');
+                    if (nameEl && sel) {
+                        const opt = sel.selectedOptions[0];
+                        nameEl.textContent = opt && opt.value ? opt.textContent : 'تعیین نشده';
+                        card.setAttribute('data-performer-id', opt?.value || '');
+                        sel.classList.add('d-none');
+                    }
+                    return true;
+                }
+            } catch { showNotification('خطا در تخصیص انجام‌دهنده', 'error'); }
+            return false;
+        }
+    </script>
+}

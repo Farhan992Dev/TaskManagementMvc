@@ -1,0 +1,302 @@
+@model TaskManagementMvc.Controllers.RegisterViewModel
+@{
+    ViewData["Title"] = "ثبت‌نام";
+}
+<style>
+    :root { --bg: #f6f7fb; --card: #ffffff; }
+    .auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); }
+    .step-card { width: 100%; max-width: 700px; background: var(--card); border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); overflow: hidden; }
+    .step-header { padding: 16px 20px; background: #0d6efd; color: #fff; display: flex; align-items: center; gap: .5rem; }
+    .step-header .title { font-size: 1.1rem; margin: 0; }
+    .stepper { display: flex; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #f0f4ff; }
+    .stepper .node { flex: 1 1 0; display: flex; align-items: center; gap: 10px; opacity: .6; font-weight: 500; }
+    .stepper .node.active { opacity: 1; }
+    .stepper .dot { width: 28px; height: 28px; border-radius: 50%; background: #dbe5ff; color: #0d6efd; display: grid; place-items: center; font-weight: 700; }
+    .stepper .node.active .dot { background: #0d6efd; color: #fff; }
+    .step-body { padding: 20px; }
+    .actions { display: flex; gap: 10px; justify-content: space-between; padding: 16px 20px; border-top: 1px solid #eee; background: #fafbff; }
+    .actions .left, .actions .right { display: flex; gap: 10px; }
+    .brand { text-align: center; color: #6c757d; margin-top: 10px; font-size: .9rem; }
+    .pw-policy { list-style: none; padding: 0; margin: 8px 0 0; }
+    .pw-policy li { font-size: .85rem; color: #6c757d; }
+    .pw-policy li.ok { color: #198754; }
+    .strength { height: 6px; background: #e9ecef; border-radius: 6px; overflow: hidden; }
+    .strength > div { height: 100%; width: 0; transition: width .25s ease; }
+    .strength.low > div { background: #dc3545; }
+    .strength.medium > div { background: #ffc107; }
+    .strength.good > div { background: #0d6efd; }
+    .strength.strong > div { background: #198754; }
+</style>
+    <div class="auth-shell">
+        <div class="step-card">
+            <div class="step-header">
+                <i class="bi bi-person-plus fs-5"></i>
+                <h1 class="title">ثبت‌نام</h1>
+            </div>
+
+            <div class="stepper">
+                <div class="node" id="node-1">
+                    <div class="dot">۱</div>
+                    <div>اطلاعات کاربر</div>
+                </div>
+                <div class="node" id="node-2">
+                    <div class="dot">۲</div>
+                    <div>اطلاعات شرکت</div>
+                </div>
+            </div>
+
+            <form id="registerForm" asp-action="Register" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div class="step-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+                    <!-- Step 1: User info -->
+                    <div id="step-1" class="step-panel">
+                        <div class="corp-field mb-3">
+                            <label asp-for="FullName" class="form-label corp-label"></label>
+                            <div class="corp-input-raw">
+                                <input asp-for="FullName" class="form-control corp-input" />
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger corp-validation"></span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="corp-field mb-0">
+                                    <label asp-for="Email" class="form-label corp-label"></label>
+                                    <div class="corp-input-group">
+                                        <span class="corp-input-icon"><i class="bi bi-envelope"></i></span>
+                                        <input asp-for="Email" class="form-control corp-input" id="Email" />
+                                    </div>
+                                    <span asp-validation-for="Email" class="text-danger corp-validation"></span>
+                                    <div id="emailFeedback" class="small mt-1"></div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6"></div>
+                            <div class="col-12 col-md-6">
+                                <div class="corp-field mb-0">
+                                    <label asp-for="Password" class="form-label corp-label"></label>
+                                    <div class="input-group">
+                                        <input asp-for="Password" class="form-control corp-input" id="Password" />
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePwd" tabindex="-1"><i class="bi bi-eye"></i></button>
+                                    </div>
+                                    <span asp-validation-for="Password" class="text-danger corp-validation"></span>
+                                    <div class="strength mt-2" id="pwStrength"><div></div></div>
+                                    <ul class="pw-policy" id="pwPolicy">
+                                    <li data-rule="len">حداقل ۶ کاراکتر</li>
+                                    <li data-rule="lower">حرف کوچک</li>
+                                    <li data-rule="upper">حرف بزرگ</li>
+                                    <li data-rule="digit">عدد</li>
+                                </ul>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="corp-field mb-0">
+                                    <label asp-for="ConfirmPassword" class="form-label corp-label"></label>
+                                    <div class="input-group">
+                                        <input asp-for="ConfirmPassword" class="form-control corp-input" id="ConfirmPassword" />
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePwd2" tabindex="-1"><i class="bi bi-eye"></i></button>
+                                    </div>
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger corp-validation"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Company info -->
+                    <div id="step-2" class="step-panel" style="display:none;">
+                        <div class="corp-field mb-3">
+                            <label asp-for="CompanyName" class="form-label corp-label"></label>
+                            <div class="corp-input-raw">
+                                <input asp-for="CompanyName" class="form-control corp-input" />
+                            </div>
+                            <span asp-validation-for="CompanyName" class="text-danger corp-validation"></span>
+                        </div>
+                        <div class="corp-field mb-3">
+                            <label asp-for="Description" class="form-label corp-label"></label>
+                            <div class="corp-input-raw">
+                                <textarea asp-for="Description" class="form-control corp-input" rows="3"></textarea>
+                            </div>
+                            <span asp-validation-for="Description" class="text-danger corp-validation"></span>
+                        </div>
+                        <div class="corp-field mb-3">
+                            <label asp-for="Phone" class="form-label corp-label"></label>
+                            <div class="corp-input-raw">
+                                <input asp-for="Phone" class="form-control corp-input" />
+                            </div>
+                            <span asp-validation-for="Phone" class="text-danger corp-validation"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <div class="left">
+                        <a class="btn btn-outline-secondary" asp-action="Login"><i class="bi bi-box-arrow-in-right ms-1"></i> ورود</a>
+                    </div>
+                    <div class="right">
+                        <button type="button" id="btnPrev" class="btn btn-light" style="display:none;">بازگشت</button>
+                        <button type="button" id="btnNext" class="btn btn-primary">ادامه</button>
+                        <button type="submit" id="btnSubmit" class="btn btn-success" style="display:none;">
+                            <span class="text">ثبت‌نام</span>
+                            <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display:none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="brand">© <span id="year"></span> TaskManagement</div>
+    </div>
+
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        (function() {
+            const form = document.getElementById('registerForm');
+            const step1 = document.getElementById('step-1');
+            const step2 = document.getElementById('step-2');
+            const node1 = document.getElementById('node-1');
+            const node2 = document.getElementById('node-2');
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            const btnSubmit = document.getElementById('btnSubmit');
+            const year = document.getElementById('year'); year.textContent = new Date().getFullYear();
+            const emailInput = document.getElementById('Email');
+            const emailFeedback = document.getElementById('emailFeedback');
+            const checkEmailUrl = '@Url.Action("CheckEmail","Account")';
+            const pwInput = document.getElementById('Password');
+            const strength = document.getElementById('pwStrength');
+            const strengthBar = strength.querySelector('div');
+            const policy = document.getElementById('pwPolicy');
+
+            let current = 1;
+            function setStep(n) {
+                current = n;
+                step1.style.display = n === 1 ? '' : 'none';
+                step2.style.display = n === 2 ? '' : 'none';
+                node1.classList.toggle('active', n === 1);
+                node2.classList.toggle('active', n === 2);
+                btnPrev.style.display = n === 2 ? '' : 'none';
+                btnNext.style.display = n === 1 ? '' : 'none';
+                btnSubmit.style.display = n === 2 ? '' : 'none';
+            }
+
+            function validateVisible() {
+                // jQuery unobtrusive validate ignores hidden fields
+                if (window.jQuery && window.jQuery.validator) {
+                    const v = jQuery(form).validate();
+                    return v.form();
+                }
+                return true;
+            }
+
+            btnNext.addEventListener('click', function() {
+                if (!validateVisible()) return;
+                setStep(2);
+            });
+            btnPrev.addEventListener('click', function() { setStep(1); });
+
+            // Prevent submitting the form with Enter on step 1
+            form.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && current === 1) {
+                    e.preventDefault();
+                    btnNext.click();
+                }
+            });
+
+            // On submit, validate all fields; if any invalid, navigate to its step
+            form.addEventListener('submit', function(e) {
+                if (window.jQuery && window.jQuery.validator) {
+                    const v = jQuery(form).validate();
+                    const prevIgnore = v.settings.ignore;
+                    v.settings.ignore = []; // validate hidden fields too
+                    const ok = v.form();
+                    if (!ok) {
+                        e.preventDefault();
+                        if (v.errorList && v.errorList.length) {
+                            const el = v.errorList[0].element;
+                            if (step1.contains(el)) setStep(1); else setStep(2);
+                        }
+                    }
+                    v.settings.ignore = prevIgnore;
+                }
+                // show loading state and prevent double submit
+                const submitBtn = document.getElementById('btnSubmit');
+                submitBtn.disabled = true;
+                const spinner = submitBtn.querySelector('.spinner-border');
+                const text = submitBtn.querySelector('.text');
+                if (spinner && text) { spinner.style.display = ''; text.textContent = 'در حال ثبت‌نام...'; }
+            });
+
+            // Default: highlight first step
+            setStep(1);
+
+            // password toggle
+            function toggleVisibility(inputId, btnId) {
+                const input = document.getElementById(inputId);
+                const btn = document.getElementById(btnId);
+                if (!input || !btn) return;
+                btn.addEventListener('click', function() {
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+                });
+            }
+            toggleVisibility('Password', 'togglePwd');
+            toggleVisibility('ConfirmPassword', 'togglePwd2');
+
+            // password strength + policy
+            function evaluatePassword(pw) {
+                const hasLower = /[a-z]/.test(pw);
+                const hasUpper = /[A-Z]/.test(pw);
+                const hasDigit = /\d/.test(pw);
+                const hasLen = typeof pw === 'string' && pw.length >= 6;
+                let score = 0;
+                if (hasLen) score++;
+                if (hasLower) score++;
+                if (hasUpper) score++;
+                if (hasDigit) score++;
+                return { hasLower, hasUpper, hasDigit, hasLen, score };
+            }
+            function updateStrengthUI(meta) {
+                policy.querySelector('[data-rule="len"]').classList.toggle('ok', meta.hasLen);
+                policy.querySelector('[data-rule="lower"]').classList.toggle('ok', meta.hasLower);
+                policy.querySelector('[data-rule="upper"]').classList.toggle('ok', meta.hasUpper);
+                policy.querySelector('[data-rule="digit"]').classList.toggle('ok', meta.hasDigit);
+                const pct = [0,25,50,75,100][meta.score];
+                strengthBar.style.width = pct + '%';
+                strength.classList.remove('low','medium','good','strong');
+                strength.classList.add(meta.score <= 1 ? 'low' : meta.score === 2 ? 'medium' : meta.score === 3 ? 'good' : 'strong');
+            }
+            pwInput.addEventListener('input', function(){ updateStrengthUI(evaluatePassword(pwInput.value)); });
+            updateStrengthUI(evaluatePassword(pwInput.value || ''));
+
+            // debounced email check
+            let emailTimer = null;
+            function setEmailFeedback(state) {
+                if (!emailFeedback) return;
+                emailFeedback.textContent = state.message || '';
+                emailFeedback.className = 'small mt-1 ' + (state.valid ? 'text-success' : state.message ? 'text-danger' : 'text-muted');
+            }
+            async function checkEmailNow(val) {
+                setEmailFeedback({ message: 'در حال بررسی...', valid: false });
+                try {
+                    const url = new URL(checkEmailUrl, window.location.origin);
+                    url.searchParams.set('email', val);
+                    const res = await fetch(url, { credentials: 'same-origin' });
+                    const data = await res.json();
+                    if (data && data.valid === true) setEmailFeedback({ message: 'ایمیل در دسترس است.', valid: true });
+                    else setEmailFeedback({ message: (data && data.message) || 'ایمیل قابل استفاده نیست.', valid: false });
+                } catch {
+                    setEmailFeedback({ message: '', valid: false });
+                }
+            }
+            function scheduleEmailCheck() {
+                const val = emailInput.value.trim();
+                if (!val) { setEmailFeedback({ message: '', valid: false }); return; }
+                clearTimeout(emailTimer);
+                emailTimer = setTimeout(() => checkEmailNow(val), 450);
+            }
+            if (emailInput) {
+                emailInput.addEventListener('input', scheduleEmailCheck);
+                emailInput.addEventListener('blur', scheduleEmailCheck);
+            }
+        })();
+    </script>

@@ -1,0 +1,76 @@
+@model TaskManagementMvc.Controllers.RegisterStep3ViewModel
+@{
+    ViewData["Title"] = "ثبت‌نام - مرحله ۳";
+}
+<style>
+    :root { --bg: #f6f7fb; --card: #ffffff; }
+    .auth-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); }
+    .step-card { width: 100%; max-width: 700px; background: var(--card); border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); overflow: hidden; }
+    .step-header { padding: 16px 20px; background: #0d6efd; color: #fff; display: flex; align-items: center; gap: .5rem; }
+    .step-header .title { font-size: 1.1rem; margin: 0; }
+    .stepper { display: flex; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #f0f4ff; }
+    .stepper .node { flex: 1 1 0; display: flex; align-items: center; gap: 10px; opacity: .6; font-weight: 500; }
+    .stepper .node.active { opacity: 1; }
+    .stepper .dot { width: 28px; height: 28px; border-radius: 50%; background: #dbe5ff; color: #0d6efd; display: grid; place-items: center; font-weight: 700; }
+    .stepper .node.active .dot { background: #0d6efd; color: #fff; }
+    .step-body { padding: 20px; }
+    .actions { display: flex; gap: 10px; justify-content: space-between; padding: 16px 20px; border-top: 1px solid #eee; background: #fafbff; }
+    .actions .left, .actions .right { display: flex; gap: 10px; }
+    .brand { text-align: center; color: #6c757d; margin-top: 10px; font-size: .9rem; }
+</style>
+
+<div class="auth-shell">
+    <div class="step-card">
+        <div class="step-header">
+            <i class="bi bi-person-plus fs-5"></i>
+            <h1 class="title">ثبت‌نام</h1>
+        </div>
+
+        <div class="stepper">
+            <div class="node">
+                <div class="dot">۱</div>
+                <div>ایمیل</div>
+            </div>
+            <div class="node">
+                <div class="dot">۲</div>
+                <div>رمز عبور</div>
+            </div>
+            <div class="node active">
+                <div class="dot">۳</div>
+                <div>شرکت</div>
+            </div>
+        </div>
+
+        <form id="registerStep3Form" asp-action="RegisterStep3" method="post" novalidate>
+            @Html.AntiForgeryToken()
+            <div class="step-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-8 mx-auto">
+                        <div class="corp-field mb-0">
+                            <label asp-for="CompanyName" class="form-label corp-label"></label>
+                            <div class="corp-input-raw">
+                                <input asp-for="CompanyName" class="form-control corp-input" autofocus />
+                            </div>
+                            <span asp-validation-for="CompanyName" class="text-danger corp-validation"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <div class="left">
+                    <a class="btn btn-light" asp-action="RegisterStep2">بازگشت</a>
+                </div>
+                <div class="right">
+                    <button type="submit" class="btn btn-success">تکمیل ثبت‌نام</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="brand">© <span id="year"></span> TaskManagement</div>
+</div>
+
+@await Html.PartialAsync("_ValidationScriptsPartial")
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+

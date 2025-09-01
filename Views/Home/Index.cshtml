@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "خانه";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Hero: Minimal, gradient background, no images -->
+<section class="home-hero d-flex align-items-center text-center text-white" dir="rtl">
+    <div class="container">
+        <h1 class="home-hero__title">سامانه مدیریت تسک</h1>
+        <p class="home-hero__subtitle">ساده، سریع و حرفه‌ای برای مدیریت پروژه‌ها، تسک‌ها و تیم شما</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+            <a class="btn btn-light btn-lg px-4" asp-controller="Projects" asp-action="Index">
+                <i class="bi bi-kanban"></i>
+                شروع سریع پروژه‌ها
+            </a>
+            <a class="btn btn-outline-light btn-lg px-4" asp-controller="Tasks" asp-action="Index">
+                <i class="bi bi-check2-square"></i>
+                مشاهده تسک‌ها
+            </a>
+        </div>
+    </div>
+    <div class="home-hero__decor" aria-hidden="true"></div>
+</section>
+
+<!-- Features: succinct cards with icons -->
+<section class="py-5" dir="rtl">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="home-feature card h-100 border-0 shadow-sm">
+                    <div class="card-body py-4">
+                        <div class="home-feature__icon text-primary"><i class="bi bi-people-fill"></i></div>
+                        <h5 class="mt-3 mb-2">مدیریت اعضا و نقش‌ها</h5>
+                        <p class="text-muted mb-0">تعریف نقش‌ها و دسترسی‌ها برای تیم‌های کوچک و بزرگ.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="home-feature card h-100 border-0 shadow-sm">
+                    <div class="card-body py-4">
+                        <div class="home-feature__icon text-success"><i class="bi bi-kanban-fill"></i></div>
+                        <h5 class="mt-3 mb-2">پروژه‌ها و بردها</h5>
+                        <p class="text-muted mb-0">نمای کانبان برای پیگیری مراحل انجام کارها.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="home-feature card h-100 border-0 shadow-sm">
+                    <div class="card-body py-4">
+                        <div class="home-feature__icon text-warning"><i class="bi bi-graph-up"></i></div>
+                        <h5 class="mt-3 mb-2">گزارش‌گیری و وضعیت</h5>
+                        <p class="text-muted mb-0">نمای کلی از وضعیت و عملکرد تیم.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</section>
+
+<!-- Quick Stats/Shortcuts -->
+<section class="py-1 pb-5" dir="rtl">
+    <div class="container">
+        <div class="row g-3 home-stats">
+            <div class="col-md-3 col-6">
+                <a class="home-stat card border-0 shadow-sm h-100" asp-controller="Projects" asp-action="Index">
+                    <div class="card-body">
+                        <div class="home-stat__label">پروژه‌ها</div>
+                        <div class="home-stat__value text-primary"><i class="bi bi-kanban me-1"></i> مشاهده</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6">
+                <a class="home-stat card border-0 shadow-sm h-100" asp-controller="Tasks" asp-action="Index">
+                    <div class="card-body">
+                        <div class="home-stat__label">تسک‌ها</div>
+                        <div class="home-stat__value text-success"><i class="bi bi-check2-square me-1"></i> مدیریت</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6">
+                <a class="home-stat card border-0 shadow-sm h-100" asp-controller="Users" asp-action="Index">
+                    <div class="card-body">
+                        <div class="home-stat__label">کاربران</div>
+                        <div class="home-stat__value text-info"><i class="bi bi-people me-1"></i> لیست</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6">
+                <a class="home-stat card border-0 shadow-sm h-100" asp-controller="Projects" asp-action="Index">
+                    <div class="card-body">
+                        <div class="home-stat__label">گزارش‌ها</div>
+                        <div class="home-stat__value text-warning"><i class="bi bi-bar-chart-line me-1"></i> مشاهده</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="home-cta text-white text-center" dir="rtl">
+    <div class="container py-5">
+        <h2 class="fw-bold mb-2">آماده‌ای شروع کنی؟</h2>
+        <p class="mb-4">برنامه‌ریزی بهتر، همکاری سریع‌تر و نتیجه‌های قابل اندازه‌گیری</p>
+        <a class="btn btn-light btn-lg" asp-controller="Projects" asp-action="Index">ایجاد/مشاهده پروژه‌ها</a>
+    </div>
+</section>
