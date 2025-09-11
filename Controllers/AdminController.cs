@@ -11,15 +11,18 @@ namespace TaskManagementMvc.Controllers
     public class AdminController : Controller
     {
         private readonly IOptionsSnapshot<NotificationSettings> _notificationSettings;
+        private readonly IOptionsSnapshot<AnalyticsOptions> _analyticsOptions;
         private readonly IScalableNotificationService _notificationService;
         private readonly IConfiguration _configuration;
 
         public AdminController(
             IOptionsSnapshot<NotificationSettings> notificationSettings,
+            IOptionsSnapshot<AnalyticsOptions> analyticsOptions,
             IScalableNotificationService notificationService,
             IConfiguration configuration)
         {
             _notificationSettings = notificationSettings;
+            _analyticsOptions = analyticsOptions;
             _notificationService = notificationService;
             _configuration = configuration;
         }
@@ -217,6 +220,73 @@ namespace TaskManagementMvc.Controllers
             }
 
             return RedirectToAction(nameof(Settings));
+        }
+
+        // GET: Admin/Analytics
+        public IActionResult Analytics()
+        {
+            var model = new AnalyticsSettingsViewModel
+            {
+                ClarityProjectId = _analyticsOptions.Value.MicrosoftClarity.ProjectId,
+                ClarityEnabled = _analyticsOptions.Value.MicrosoftClarity.Enabled
+            };
+
+            ViewData["Title"] = "تنظیمات آنالیتیکس";
+            ViewData["Subtitle"] = "مدیریت تنظیمات Microsoft Clarity و سایر ابزارهای آنالیتیکس";
+
+            return View(model);
+        }
+
+        // POST: Admin/Analytics
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Analytics(AnalyticsSettingsViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewData["Title"] = "تنظیمات آنالیتیکس";
+                ViewData["Subtitle"] = "مدیریت تنظیمات Microsoft Clarity و سایر ابزارهای آنالیتیکس";
+                return View(model);
+            }
+
+            try
+            {
+                // Note: In a production environment, you would typically save these settings
+                // to a database or update the appsettings.json file programmatically
+                // For now, we'll show a message that settings need to be updated manually
+
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    TempData["ErrorMessage"] = "کاربر احراز هویت نشده است.";
+                    return RedirectToAction(nameof(Analytics));
+                }
+
+                await _notificationService.SendToUserAsync(
+                    userId,
+                    new ScalableNotificationMessage
+                    {
+                        Type = "info",
+                        Title = "تنظیمات آنالیتیکس",
+                        Message = $"برای اعمال تغییرات، لطفاً مقادیر زیر را در فایل appsettings.json به‌روزرسانی کنید:\n" +
+                                 $"Analytics:MicrosoftClarity:ProjectId = \"{model.ClarityProjectId}\"\n" +
+                                 $"Analytics:MicrosoftClarity:Enabled = {model.ClarityEnabled.ToString().ToLower()}",
+                        ActionUrl = Url.Action("Analytics"),
+                        ActionText = "بازگشت به تنظیمات"
+                    }
+                );
+
+                TempData["InfoMessage"] = "برای اعمال تغییرات، لطفاً فایل appsettings.json را به‌روزرسانی کنید و برنامه را مجدداً راه‌اندازی نمایید.";
+                TempData["ClarityProjectId"] = model.ClarityProjectId;
+                TempData["ClarityEnabled"] = model.ClarityEnabled;
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"خطا در پردازش تنظیمات: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Analytics));
         }
     }
 }

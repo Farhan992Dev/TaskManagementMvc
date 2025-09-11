@@ -5,29 +5,12 @@ using TaskManagementMvc.Data;
 using TaskManagementMvc.Models;
 using TaskManagementMvc.Services;
 using TaskManagementMvc.Services.Authorization;
-using TaskManagementMvc.Services.Registration;
 using StackExchange.Redis;
 using TaskManagementMvc.Interceptors;
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions{ Args = args });
 
 builder.Services.AddControllersWithViews();
-// Localize default model binding messages (server-side validation) to Persian
-builder.Services.AddControllers(options =>
-{
-    var p = options.ModelBindingMessageProvider;
-    p.SetValueIsInvalidAccessor(value => $"مقدار '{value}' نامعتبر است.");
-    p.SetValueMustNotBeNullAccessor(value => "این مقدار نمی‌تواند خالی باشد.");
-    p.SetMissingBindRequiredValueAccessor(value => $"'{value}' الزامی است.");
-    p.SetMissingKeyOrValueAccessor(() => "مقدار الزامی است.");
-    p.SetUnknownValueIsInvalidAccessor(value => $"مقدار '{value}' نامعتبر است.");
-    p.SetAttemptedValueIsInvalidAccessor((value, fieldName) => $"مقدار '{value}' برای '{fieldName}' نامعتبر است.");
-    p.SetNonPropertyAttemptedValueIsInvalidAccessor(value => $"مقدار '{value}' نامعتبر است.");
-    p.SetMissingRequestBodyRequiredValueAccessor(() => "بدنه درخواست الزامی است.");
-    p.SetValueMustBeANumberAccessor(value => $"مقدار باید عددی باشد.");
-})
-    .AddViewLocalization();
 // Configure EF Core database provider.
 // Default to SQLite for local development unless UseMySql flag is set in config.
 
@@ -53,7 +36,6 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
     options.SignIn.RequireConfirmedEmail = false;
 })
 .AddEntityFrameworkStores<TaskManagementContext>()
-.AddErrorDescriber<TaskManagementMvc.Services.PersianIdentityErrorDescriber>()
 .AddDefaultTokenProviders();
 
 // Configure cookie authentication
@@ -77,12 +59,14 @@ builder.Services.AddScoped<IRazorViewRenderer, RazorViewRenderer>();
 builder.Services.AddScoped<ProjectAccessService>();
 builder.Services.AddScoped<IInvoiceAutomationService, InvoiceAutomationService>();
 builder.Services.AddHostedService<InvoiceAutomationHostedService>();
-// Registration pipeline
-builder.Services.AddScoped<IRegisterPipeline, RegisterPipeline>();
 
 // Configure notification settings
 builder.Services.Configure<NotificationSettings>(
     builder.Configuration.GetSection("Notifications"));
+
+// Configure analytics settings
+builder.Services.Configure<AnalyticsOptions>(
+    builder.Configuration.GetSection("Analytics"));
 
 // Configure Redis connection (conditionally)
 var notificationSettings = builder.Configuration.GetSection("Notifications").Get<NotificationSettings>() ?? new NotificationSettings();
@@ -120,17 +104,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
-
-// Localization config (fa-IR by default)
-var supportedCultures = new[] { new CultureInfo("fa-IR") };
-var localizationOptions = new RequestLocalizationOptions
-{
-    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("fa-IR"),
-    ApplyCurrentCultureToResponseHeaders = true,
-    SupportedCultures = supportedCultures.ToList(),
-    SupportedUICultures = supportedCultures.ToList()
-};
-app.UseRequestLocalization(localizationOptions);
 
 // auto-migrate DB on startup
 using (var scope = app.Services.CreateScope())

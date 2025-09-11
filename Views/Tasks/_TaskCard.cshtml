@@ -52,9 +52,40 @@
     position: relative;
 }
 
-/* Removed three-dots menu button styles */
+.task-menu-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-/* Removed dropdown styles */
+.task-menu-btn:hover {
+    background: rgba(108, 117, 125, 0.1);
+    color: #495057;
+    transform: scale(1.1);
+}
+
+.task-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: white;
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08);
+    z-index: 1000;
+    min-width: 160px;
+    display: none;
+    overflow: hidden;
+    animation: dropdownSlide 0.15s ease-out;
+}
 
 @@keyframes dropdownSlide {
     from {
@@ -170,56 +201,15 @@
 
 .task-stats {
     display: flex;
-    gap: 8px;
-    font-size: 11px;
+    gap: 12px;
+    font-size: 12px;
     color: #6c757d;
-    flex-wrap: wrap;
 }
 
 .stat-item {
     display: flex;
     align-items: center;
-    gap: 3px;
-    white-space: nowrap;
-    background: rgba(108, 117, 125, 0.08);
-    padding: 4px 6px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
-
-.stat-item:hover {
-    background: rgba(108, 117, 125, 0.15);
-    transform: translateY(-1px);
-}
-
-.stat-item-warning {
-    background: rgba(220, 53, 69, 0.1) !important;
-    color: #dc3545 !important;
-    border: 1px solid rgba(220, 53, 69, 0.2);
-}
-
-.stat-item-warning:hover {
-    background: rgba(220, 53, 69, 0.2) !important;
-    transform: translateY(-1px);
-}
-
-.stat-item-warning i {
-    color: #dc3545 !important;
-}
-
-.stat-item i {
-    font-size: 11px;
-    width: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.performer-name {
-    max-width: 80px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    gap: 4px;
 }
 
 .task-sp {
@@ -248,19 +238,30 @@
     };
 }
 
-<div class="task-card" draggable="true" 
-     data-task-id="@Model.Id" 
-     data-performer-id="@(Model.PerformerId?.ToString() ?? "")" 
-     data-hours="@Model.Hours.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
-     title="دبل کلیک برای ویرایش">
+<div class="task-card" draggable="true" data-task-id="@Model.Id" title="دبل کلیک برای ویرایش">
     <div class="task-priority-stripe @priorityClass"></div>
     
     <div class="task-header">
         <span class="task-id">#@Model.Id</span>
-        <div class="d-flex align-items-center gap-1">
-            <button class="btn btn-sm btn-outline-secondary" title="مشاهده" onclick="viewTask(@Model.Id)"><i class="bi bi-eye"></i></button>
-            <button class="btn btn-sm btn-outline-primary" title="ویرایش" onclick="editTask(@Model.Id)"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-sm btn-outline-danger" title="حذف" onclick="deleteTask(@Model.Id)"><i class="bi bi-trash"></i></button>
+        <div class="task-menu">
+            <button class="task-menu-btn" onclick="toggleDropdown(this)" title="منو">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <div class="task-dropdown">
+                <button class="dropdown-item" onclick="editTask(@Model.Id)">
+                    <i class="bi bi-pencil"></i>
+                    <span>ویرایش تسک</span>
+                </button>
+                <button class="dropdown-item" onclick="viewTask(@Model.Id)">
+                    <i class="bi bi-eye"></i>
+                    <span>مشاهده جزئیات</span>
+                </button>
+                <div style="height: 1px; background: #e5e7eb; margin: 4px 12px;"></div>
+                <button class="dropdown-item text-danger" onclick="deleteTask(@Model.Id)">
+                    <i class="bi bi-trash"></i>
+                    <span>حذف تسک</span>
+                </button>
+            </div>
         </div>
     </div>
     
@@ -268,6 +269,10 @@
     
     <div class="task-labels">
         <span class="task-label">@Model.Priority.ToString().ToUpper()</span>
+        @if (Model.Project != null && !string.IsNullOrEmpty(Model.Project.Name))
+        {
+            <span class="task-label" style="background: #fff3cd; color: #856404;">@Model.Project.Name</span>
+        }
     </div>
     
     <div class="task-progress">
@@ -278,37 +283,70 @@
     
     <div class="task-footer">
         <div class="task-stats">
-            @{
-                var isCompletedWithoutHours = Model.Status == TaskManagementMvc.Models.TaskStatus.Completed && Model.Hours == 0;
-                var hoursClass = isCompletedWithoutHours ? "stat-item stat-item-warning" : "stat-item";
-            }
-            <div class="@hoursClass stat-item-hours" data-task-id="@Model.Id">
-                <i class="bi bi-hourglass-split"></i>
-                <span class="hours-display" title="ساعت‌های ثبت شده" onclick="beginEditHours(@Model.Id); event.stopPropagation();" style="cursor: pointer;">@(Model.Hours.ToString("0.#")) ساعت</span>
-                <button type="button" class="btn btn-link btn-sm p-0 ms-1" title="ویرایش ساعت" onclick="beginEditHours(@Model.Id); event.stopPropagation();"><i class="bi bi-pencil-square"></i></button>
+            <div class="stat-item">
+                <i class="bi bi-clock"></i>
+                <span>@(Model.OriginalEstimateHours?.ToString("0") ?? "0")ساعت</span>
             </div>
-            <div class="stat-item stat-item-performer" data-task-id="@Model.Id" data-performer-id="@(Model.PerformerId?.ToString() ?? "")">
-                <i class="bi bi-person-check"></i>
-                <span class="performer-name" title="انجام‌دهنده: @(Model.Performer?.FullName ?? "تعیین نشده")" onclick="beginAssignPerformer(@Model.Id); event.stopPropagation();" style="cursor: pointer;">@(Model.Performer?.FullName ?? "تعیین نشده")</span>
-                @{ var qaPerformers = ViewData["ModalPerformers"] as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>; }
-                @if (qaPerformers != null)
-                {
-                    <button type="button" class="btn btn-link btn-sm p-0 ms-1" title="تخصیص انجام‌دهنده" onclick="beginAssignPerformer(@Model.Id); event.stopPropagation();"><i class="bi bi-pencil-square"></i></button>
-                    <select class="form-select form-select-sm d-none inline-performer-select" onchange="submitAssignPerformer(@Model.Id, this.value); event.stopPropagation();">
-                        <option value="">بدون انجام‌دهنده</option>
-                        @foreach (var it in qaPerformers)
-                        {
-                            <option value="@it.Value" selected="@(it.Value == (Model.PerformerId?.ToString() ?? ""))">@it.Text</option>
-                        }
-                    </select>
-                }
+            <div class="stat-item">
+                <i class="bi bi-calendar"></i>
+                <span>@Model.CreatedAt.ToString("MM/dd")</span>
             </div>
         </div>
-        
+        <div class="task-sp">@(Model.OriginalEstimateHours?.ToString("0") ?? "0") SP</div>
     </div>
 </div>
 
 <script>
+function toggleDropdown(button) {
+    const dropdown = button.nextElementSibling;
+    
+    // Close all other dropdowns
+    document.querySelectorAll('.task-dropdown.show').forEach(d => {
+        if (d !== dropdown) d.classList.remove('show');
+    });
+    
+    // Toggle current dropdown
+    const isShowing = dropdown.classList.contains('show');
+    if (isShowing) {
+        dropdown.classList.remove('show');
+    } else {
+        dropdown.classList.add('show');
+        
+        // Position dropdown to ensure it's visible
+        const rect = dropdown.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        if (rect.right > viewportWidth) {
+            dropdown.style.right = '0';
+            dropdown.style.left = 'auto';
+        }
+        
+        if (rect.bottom > viewportHeight) {
+            dropdown.style.top = 'auto';
+            dropdown.style.bottom = '100%';
+        }
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.task-menu')) {
+        document.querySelectorAll('.task-dropdown.show').forEach(d => {
+            d.classList.remove('show');
+        });
+    }
+});
+
+// Close dropdown when pressing Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.task-dropdown.show').forEach(d => {
+            d.classList.remove('show');
+        });
+    }
+});
+
 async function deleteTask(id) {
     if (!confirm('آیا از حذف این تسک اطمینان دارید؟')) return;
     
@@ -327,28 +365,14 @@ async function deleteTask(id) {
         });
         
         if (response.ok) {
-            let ok = true;
-            try {
-                const json = await response.json();
-                ok = json?.success === true;
-            } catch {}
-
-            if (ok) {
-                const card = document.querySelector(`[data-task-id="${id}"]`);
-                if (card) {
-                    card.style.transition = 'all 0.3s ease';
-                    card.style.transform = 'scale(0)';
-                    card.style.opacity = '0';
-                    setTimeout(() => card.remove(), 300);
-                }
-                showNotification('تسک حذف شد', 'success');
-                // Refresh board counters and hours after DOM change
-                if (typeof refreshKanbanBoard === 'function') {
-                    await refreshKanbanBoard();
-                }
-            } else {
-                throw new Error('Delete failed');
+            const card = document.querySelector(`[data-task-id="${id}"]`);
+            if (card) {
+                card.style.transition = 'all 0.3s ease';
+                card.style.transform = 'scale(0)';
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
             }
+            showNotification('تسک حذف شد', 'success');
         } else {
             throw new Error('Failed to delete');
         }

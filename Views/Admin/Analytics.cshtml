@@ -1,0 +1,214 @@
+@model AnalyticsSettingsViewModel
+
+@{
+    ViewData["Title"] = "تنظیمات آنالیتیکس";
+    ViewData["Subtitle"] = "مدیریت تنظیمات Microsoft Clarity و سایر ابزارهای آنالیتیکس";
+}
+
+@section PageActions {
+    <a asp-action="Settings" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-right"></i>
+        بازگشت به تنظیمات کلی
+    </a>
+}
+
+<div class="row">
+    <div class="col-12">
+        @* Alert Messages *@
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                @TempData["InfoMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                
+                @if (TempData["ClarityProjectId"] != null)
+                {
+                    <hr>
+                    <p class="mb-2"><strong>تنظیمات پیشنهادی برای appsettings.json:</strong></p>
+                    <pre class="bg-light p-3 rounded"><code>"Analytics": {
+  "MicrosoftClarity": {
+    "ProjectId": "@TempData["ClarityProjectId"]",
+    "Enabled": @TempData["ClarityEnabled"]?.ToString()?.ToLower()
+  }
+}</code></pre>
+                }
+            </div>
+        }
+
+        <!-- Microsoft Clarity Settings Card -->
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+                <h5 class="mb-0">Microsoft Clarity</h5>
+                @if (Model.IsConfigured)
+                {
+                    <span class="badge bg-success ms-auto">پیکربندی شده</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning ms-auto">نیاز به پیکربندی</span>
+                }
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Microsoft Clarity ابزار رایگان آنالیتیکس وب مایکروسافت است که امکان تجزیه و تحلیل رفتار کاربران 
+                    از طریق heatmap، session recording و insights مفیدی فراهم می‌کند.
+                </p>
+
+                <form asp-action="Analytics" method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label asp-for="ClarityProjectId" class="form-label">
+                                <i class="bi bi-key me-1"></i>
+                                @Html.DisplayNameFor(m => m.ClarityProjectId)
+                            </label>
+                            <input asp-for="ClarityProjectId" class="form-control" placeholder="مثال: abc123def456" />
+                            <span asp-validation-for="ClarityProjectId" class="text-danger"></span>
+                            <div class="form-text">
+                                پروژه ID را از داشبورد Clarity خود کپی کنید. 
+                                <a href="https://clarity.microsoft.com" target="_blank" class="text-decoration-none">
+                                    مراجعه به Clarity <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">وضعیت ردیابی</label>
+                            <div class="form-check form-switch">
+                                <input asp-for="ClarityEnabled" class="form-check-input" type="checkbox" />
+                                <label asp-for="ClarityEnabled" class="form-check-label">
+                                    @Html.DisplayNameFor(m => m.ClarityEnabled)
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                ردیابی Clarity را فعال یا غیرفعال کنید
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                ذخیره تنظیمات
+                            </button>
+                        </div>
+                        
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            برای اعمال تغییرات نیاز به راه‌اندازی مجدد برنامه است
+                        </small>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Information Cards -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h6 class="card-title text-info">
+                            <i class="bi bi-lightbulb me-1"></i>
+                            نحوه دریافت Project ID
+                        </h6>
+                        <ol class="small mb-0">
+                            <li>به <a href="https://clarity.microsoft.com" target="_blank">clarity.microsoft.com</a> مراجعه کنید</li>
+                            <li>پروژه جدیدی ایجاد کنید یا پروژه موجود را انتخاب کنید</li>
+                            <li>از قسمت Setup، کد ردیابی را کپی کنید</li>
+                            <li>Project ID از کد ردیابی استخراج کنید</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <h6 class="card-title text-success">
+                            <i class="bi bi-shield-check me-1"></i>
+                            حریم خصوصی
+                        </h6>
+                        <p class="small mb-0">
+                            Microsoft Clarity طبق قوانین GDPR عمل می‌کند و اطلاعات شخصی کاربران را 
+                            به صورت خودکار پنهان می‌کند. همچنین رایگان است و محدودیت ترافیک ندارد.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Status -->
+        @if (!string.IsNullOrEmpty(Model.ClarityProjectId))
+        {
+            <div class="card mt-4 border-primary">
+                <div class="card-body">
+                    <h6 class="card-title text-primary">
+                        <i class="bi bi-activity me-1"></i>
+                        وضعیت فعلی
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Project ID:</strong> <code>@Model.ClarityProjectId</code></p>
+                            <p class="mb-1"><strong>وضعیت:</strong> 
+                                @if (Model.ClarityEnabled)
+                                {
+                                    <span class="badge bg-success">فعال</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">غیرفعال</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>پیکربندی:</strong> 
+                                @if (Model.IsConfigured)
+                                {
+                                    <span class="badge bg-success">کامل</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">ناقص</span>
+                                }
+                            </p>
+                            <p class="mb-0">
+                                <a href="https://clarity.microsoft.com" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>
+                                    مشاهده داشبورد
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

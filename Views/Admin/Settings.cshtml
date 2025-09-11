@@ -50,7 +50,7 @@
 
                     <!-- دکمه‌های آزمایش -->
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <form asp-action="TestNotification" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-primary w-100">
                                     <i class="bi bi-bell"></i>
@@ -58,7 +58,7 @@
                                 </button>
                             </form>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <form asp-action="TestRedisConnection" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-info w-100" @(!Model.UseRedis ? "disabled" : "")>
                                     <i class="bi bi-database-check"></i>
@@ -66,10 +66,16 @@
                                 </button>
                             </form>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <a href="@Url.Action("Index", "Notifications")" class="btn btn-success w-100">
                                 <i class="bi bi-list-check"></i>
                                 مدیریت اعلان‌ها
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-action="Analytics" class="btn btn-warning w-100">
+                                <i class="bi bi-graph-up-arrow"></i>
+                                تنظیمات آنالیتیکس
                             </a>
                         </div>
                     </div>

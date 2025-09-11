@@ -438,16 +438,15 @@ namespace TaskManagementMvc.Controllers
                     existingProject.Budget = vm.Budget;
                     existingProject.ActualCost = vm.ActualCost;
                     existingProject.Priority = vm.Priority;
-                    existingProject.Status = vm.Status ?? ProjectStatus.Active;
+                    existingProject.Status = vm.Status;
                     existingProject.CompanyId = User.IsInRole(Roles.SystemAdmin) ? vm.CompanyId : user!.CompanyId!.Value;
                     existingProject.ProjectManagerId = vm.ProjectManagerId;
                     existingProject.UpdatedAt = DateTime.Now;
                     existingProject.UpdatedBy = User.Identity?.Name;
 
                     _context.Update(existingProject);
-                    await _context.SaveChangesAsync();
-
-                    // ارسال notification موفقیت
+                    existingProject.Status = vm.Status ?? ProjectStatus.Active;
+                   // ارسال notification موفقیت
                     await _notificationService.SendToUserAsync(
                         user.Id.ToString(),
                         new ScalableNotificationMessage
@@ -686,10 +685,10 @@ namespace TaskManagementMvc.Controllers
             return View();
         }
 
-    // POST: Projects/GrantAccessAjax (legacy AJAX endpoint used by Access.cshtml)
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GrantAccessAjax(int projectId, int userId, string? notes)
+        // POST: Projects/GrantAccess/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GrantAccess(int projectId, int userId, string? notes)
         {
             try
             {
@@ -829,14 +828,14 @@ namespace TaskManagementMvc.Controllers
                 }
                 catch { /* Ignore notification errors */ }
                 
-        return Json(new { success = false, message = $"خطا در اعطای دسترسی: {ex.Message}" });
+                return Json(new { success = false, message = $"خطا در اعطای دسترسی: {ex.Message}" });
             }
         }
 
-    // POST: Projects/RevokeAccessAjax (legacy AJAX endpoint used by Access.cshtml)
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RevokeAccessAjax(int projectId, int userId)
+        // POST: Projects/RevokeAccess/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RevokeAccess(int projectId, int userId)
         {
             var user = await _userManager.GetUserAsync(User);
             var project = await _context.Projects
