@@ -3,8 +3,8 @@
 <style>
 .task-card {
     background: white;
-    border-radius: 12px;
-    margin-bottom: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
     border: 1px solid #e9ecef;
     position: relative;
     cursor: move;
@@ -13,13 +13,13 @@
 }
 
 .task-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transform: translateY(-1px);
 }
 
 .task-card.dragging {
     opacity: 0.5;
-    transform: rotate(5deg);
+    transform: rotate(2deg);
 }
 
 .task-priority-stripe {
@@ -27,7 +27,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: 3px;
 }
 
 .priority-low { background: #28a745; }
@@ -36,7 +36,7 @@
 .priority-critical { background: #dc3545; }
 
 .task-header {
-    padding: 16px 16px 8px 16px;
+    padding: 8px 12px 4px 12px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -44,7 +44,7 @@
 
 .task-id {
     color: #6c757d;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 500;
 }
 
@@ -56,10 +56,10 @@
     background: none;
     border: none;
     color: #6c757d;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
-    padding: 6px 8px;
-    border-radius: 6px;
+    padding: 4px 6px;
+    border-radius: 4px;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
@@ -69,7 +69,6 @@
 .task-menu-btn:hover {
     background: rgba(108, 117, 125, 0.1);
     color: #495057;
-    transform: scale(1.1);
 }
 
 .task-dropdown {
@@ -78,10 +77,10 @@
     right: 0;
     background: white;
     border: 1px solid #e0e6ed;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     z-index: 1000;
-    min-width: 160px;
+    min-width: 140px;
     display: none;
     overflow: hidden;
     animation: dropdownSlide 0.15s ease-out;
@@ -106,31 +105,30 @@
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 12px 16px;
+    padding: 8px 12px;
     color: #374151;
     text-decoration: none;
     border: none;
     background: none;
     text-align: right;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
-    gap: 8px;
+    gap: 6px;
 }
 
 .dropdown-item i {
-    font-size: 16px;
-    width: 16px;
+    font-size: 14px;
+    width: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .dropdown-item:hover {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: #f8fafc;
     color: #1e293b;
-    padding-right: 20px;
 }
 
 .dropdown-item.text-danger {
@@ -138,9 +136,8 @@
 }
 
 .dropdown-item.text-danger:hover {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    background: #fef2f2;
     color: #b91c1c;
-    padding-right: 20px;
 }
 
 .dropdown-item.text-danger i {
@@ -148,50 +145,50 @@
 }
 
 .task-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: #1a1a1a;
-    margin: 8px 16px;
-    line-height: 1.4;
+    margin: 4px 12px 6px 12px;
+    line-height: 1.3;
 }
 
 .task-labels {
-    padding: 0 16px 8px 16px;
+    padding: 0 12px 6px 12px;
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: wrap;
 }
 
 .task-label {
     background: #e3f2fd;
     color: #1565c0;
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 500;
-    padding: 4px 8px;
-    border-radius: 12px;
+    padding: 2px 6px;
+    border-radius: 8px;
     text-transform: uppercase;
 }
 
 .task-progress {
-    padding: 8px 16px;
+    padding: 4px 12px;
 }
 
 .progress-bar-custom {
-    height: 6px;
+    height: 4px;
     background: #e9ecef;
-    border-radius: 3px;
+    border-radius: 2px;
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
-    border-radius: 3px;
+    border-radius: 2px;
     transition: width 0.3s ease;
 }
 
 .task-footer {
-    padding: 12px 16px;
+    padding: 8px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -201,19 +198,19 @@
 
 .task-stats {
     display: flex;
-    gap: 12px;
-    font-size: 12px;
+    gap: 8px;
+    font-size: 10px;
     color: #6c757d;
 }
 
 .stat-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 
 .task-sp {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: #495057;
 }
@@ -238,7 +235,7 @@
     };
 }
 
-<div class="task-card" draggable="true" data-task-id="@Model.Id" title="دبل کلیک برای ویرایش">
+<div class="task-card" draggable="true" data-task-id="@Model.Id" data-assignee-id="@Model.PerformerId" title="دبل کلیک برای ویرایش">
     <div class="task-priority-stripe @priorityClass"></div>
     
     <div class="task-header">
@@ -291,6 +288,13 @@
                 <i class="bi bi-calendar"></i>
                 <span>@Model.CreatedAt.ToString("MM/dd")</span>
             </div>
+            @if (Model.Status == TaskManagementMvc.Models.TaskStatus.Completed && Model.EndAt.HasValue)
+            {
+                <div class="stat-item completed-date">
+                    <i class="bi bi-check-circle text-success"></i>
+                    <span>@Model.EndAt.Value.ToString("MM/dd")</span>
+                </div>
+            }
         </div>
         <div class="task-sp">@(Model.OriginalEstimateHours?.ToString("0") ?? "0") SP</div>
     </div>

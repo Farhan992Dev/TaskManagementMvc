@@ -79,6 +79,136 @@ namespace TaskManagementMvc.Controllers
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
+            // Get all users for filter dropdown
+            try 
+            {
+                // کاربران مربوط به شرکت‌های پروژه‌هایی که کاربر دسترسی داره رو بگیر
+                HashSet<int> accessibleCompanyIds = new HashSet<int>();
+                
+                if (User.IsInRole(Roles.SystemAdmin))
+                {
+                    // Admin can see all users from all companies
+                    var allCompanyIds = await _context.Projects
+                        .Where(p => p.CompanyId > 0)
+                        .Select(p => p.CompanyId)
+                        .Distinct()
+                        .ToListAsync();
+                    
+                    foreach (var companyId in allCompanyIds)
+                    {
+                        accessibleCompanyIds.Add(companyId);
+                    }
+                }
+                else
+                {
+                    // Regular users see users from companies of projects they have access to
+                    var accessibleProjectIds = await _context.ProjectAccess
+                        .Where(pa => pa.UserId == user.Id && pa.IsActive)
+                        .Select(pa => pa.ProjectId)
+                        .ToListAsync();
+
+                    var companiesOfAccessibleProjects = await _context.Projects
+                        .Where(p => accessibleProjectIds.Contains(p.Id) && p.CompanyId > 0)
+                        .Select(p => p.CompanyId)
+                        .Distinct()
+                        .ToListAsync();
+                    
+                    foreach (var companyId in companiesOfAccessibleProjects)
+                    {
+                        accessibleCompanyIds.Add(companyId);
+                    }
+                }
+
+                var users = await _userManager.Users
+                    .Where(u => u.CompanyId.HasValue && accessibleCompanyIds.Contains(u.CompanyId.Value))
+                    .Select(u => new { u.Id, FullName = u.FullName ?? u.UserName ?? "نامشخص", u.CompanyId })
+                    .OrderBy(u => u.FullName)
+                    .ToListAsync();
+                
+                ViewBag.Users = users;
+                
+                // Debug log to check if users are loaded
+                System.Diagnostics.Debug.WriteLine($"Loaded {users.Count} users from {accessibleCompanyIds.Count} companies for filter dropdown - TasksController.cs:120");
+            }
+            catch (Exception ex)
+            {
+                // Log the actual error for debugging
+                System.Diagnostics.Debug.WriteLine($"Error loading users: {ex.Message} - TasksController.cs:125");
+                // Fallback to empty list if user query fails
+                ViewBag.Users = new List<object>();
+            }
+
+            // Get user's manageable projects for quick add default
+            try 
+            {
+                if (User.IsInRole(Roles.SystemAdmin))
+                {
+                    ViewBag.UserProjects = await _context.Projects
+                        .Select(p => new { p.Id, p.Name })
+                        .OrderBy(p => p.Name)
+                        .ToListAsync();
+                }
+                else
+                {
+                    var accessibleProjectIds = await _context.ProjectAccess
+                        .Where(pa => pa.UserId == user.Id && pa.IsActive)
+                        .Select(pa => pa.ProjectId)
+                        .ToListAsync();
+
+                    ViewBag.UserProjects = await _context.Projects
+                        .Where(p => accessibleProjectIds.Contains(p.Id))
+                        .Select(p => new { p.Id, p.Name })
+                        .OrderBy(p => p.Name)
+                        .ToListAsync();
+                }
+
+                // Set default project for quick add
+                var projects = ViewBag.UserProjects as List<object>;
+                if (projects != null && projects.Any())
+                {
+                    // Try to auto-detect project from URL (if user is viewing a specific board)
+                    int? defaultProjectId = null;
+                    try
+                    {
+                        var referer = Request.Headers["Referer"].ToString();
+                        if (!string.IsNullOrWhiteSpace(referer))
+                        {
+                            var uri = new Uri(referer);
+                            var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                            var boardIdx = Array.FindIndex(segments, s => string.Equals(s, "Board", StringComparison.OrdinalIgnoreCase));
+                            if (boardIdx > 0 && boardIdx + 1 < segments.Length)
+                            {
+                                var code = segments[boardIdx + 1];
+                                var proj = await _context.Projects.FirstOrDefaultAsync(p => p.Code == code);
+                                if (proj != null && projects.Any(p => ((dynamic)p).Id == proj.Id))
+                                {
+                                    defaultProjectId = proj.Id;
+                                }
+                            }
+                        }
+                    }
+                    catch { /* ignore referer parsing issues */ }
+
+                    // If no project detected from URL, use the first available project
+                    if (defaultProjectId == null)
+                    {
+                        defaultProjectId = ((dynamic)projects.First()).Id;
+                    }
+
+                    ViewBag.DefaultProjectId = defaultProjectId;
+                }
+                else
+                {
+                    ViewBag.DefaultProjectId = null;
+                }
+            }
+            catch (Exception)
+            {
+                // Fallback to empty list if project query fails
+                ViewBag.UserProjects = new List<object>();
+                ViewBag.DefaultProjectId = null;
+            }
+
             return View(tasks);
         }
 

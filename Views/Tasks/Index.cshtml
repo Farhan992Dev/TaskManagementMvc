@@ -3,6 +3,7 @@
 @using TaskStatusEnum = TaskManagementMvc.Models.TaskStatus;
 @{
     ViewData["Title"] = "بورد مدیریت تسک‌ها";
+    Layout = "_LayoutFullscreen"; // Use a custom fullscreen layout
     var notStartedTasks = Model.Where(t => t.Status == TaskStatusEnum.NotStarted).ToList();
     var inProgressTasks = Model.Where(t => t.Status == TaskStatusEnum.InProgress).ToList();
     var completedTasks = Model.Where(t => t.Status == TaskStatusEnum.Completed).ToList();
@@ -12,20 +13,31 @@
     body {
         background-color: #f8f9fa;
         font-family: 'Vazirmatn', sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
     }
     
-    .page-header {
+    .task-board-container {
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .task-board-header {
         background: white;
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        border: 1px solid #e9ecef;
+        border-bottom: 1px solid #e9ecef;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
     }
     
     .page-title {
         color: #1a1a1a;
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 700;
         margin: 0;
         display: flex;
@@ -33,18 +45,18 @@
         gap: 12px;
     }
     
-    .page-subtitle {
-        color: #6c757d;
-        font-size: 14px;
-        margin: 8px 0 0 0;
+    .quick-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
     }
     
     .btn-new-task {
         background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         color: white;
         border: none;
-        border-radius: 12px;
-        padding: 12px 24px;
+        border-radius: 8px;
+        padding: 8px 16px;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
@@ -56,36 +68,244 @@
         box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
     }
     
+    .btn-fullscreen {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-fullscreen:hover {
+        background: #e9ecef;
+    }
+    
+    .btn-menu {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .btn-menu:hover {
+        background: #e9ecef;
+    }
+    
+    .menu-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        background: white;
+        border: 1px solid #e0e6ed;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 1000;
+        min-width: 200px;
+        display: none;
+        overflow: hidden;
+        animation: menuSlide 0.15s ease-out;
+    }
+    
+    .menu-dropdown.show {
+        display: block;
+    }
+    
+    .menu-item {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 12px 16px;
+        color: #374151;
+        text-decoration: none;
+        border: none;
+        background: none;
+        text-align: right;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        gap: 8px;
+    }
+    
+    .menu-item:hover {
+        background: #f8fafc;
+        color: #1e293b;
+    }
+    
+    .menu-item i {
+        font-size: 16px;
+        width: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    @@keyframes menuSlide {
+        from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
     .kanban-container {
         display: flex;
-        gap: 16px;
-        min-height: calc(100vh - 200px);
+        gap: 12px;
+        flex: 1;
+        overflow: hidden;
+        padding: 12px 16px;
     }
     
     .kanban-column {
         flex: 1;
+        max-width: 320px;
+        min-width: 280px;
         background: white;
-        border-radius: 16px;
+        border-radius: 8px;
         border: 1px solid #e9ecef;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        min-height: 0;
     }
     
     .column-header {
-        padding: 20px;
+        padding: 12px 16px;
         background: #f8f9fa;
         border-bottom: 1px solid #e9ecef;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-shrink: 0;
+    }
+    
+    .column-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 transparent;
+    }
+    
+    .column-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .column-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .column-body::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+    
+    .column-body::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+    
+    .quick-add-form {
+        margin-bottom: 16px;
+        padding: 12px;
+        background: #f8f9fa;
+        border: 1px dashed #dee2e6;
+        border-radius: 8px;
+        display: none;
+        transition: all 0.2s ease;
+    }
+    
+    .quick-add-form.active {
+        display: block;
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.04);
+    }
+    
+    .quick-add-input {
+        width: 100%;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        margin-bottom: 8px;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+    
+    .quick-add-input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .quick-add-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    
+    .btn-quick {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-quick-save {
+        background: #6366f1;
+        color: white;
+        border: none;
+    }
+    
+    .btn-quick-save:hover {
+        background: #5856eb;
+    }
+    
+    .btn-quick-cancel {
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+    }
+    
+    .btn-quick-cancel:hover {
+        background: #e9ecef;
+    }
+    
+    .add-task-trigger {
+        width: 100%;
+        padding: 12px;
+        background: transparent;
+        border: 1px dashed #dee2e6;
+        border-radius: 8px;
+        color: #6c757d;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    
+    .add-task-trigger:hover {
+        border-color: #6366f1;
+        color: #6366f1;
+        background: rgba(99, 102, 241, 0.04);
     }
     
     .column-title {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
         color: #1a1a1a;
         margin: 0;
@@ -94,10 +314,13 @@
     .column-count {
         background: #e9ecef;
         color: #6c757d;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
-        padding: 4px 8px;
-        border-radius: 12px;
+        padding: 3px 6px;
+        border-radius: 10px;
+        min-width: 20px;
+        text-align: center;
+    }
         min-width: 24px;
         text-align: center;
     }
@@ -146,24 +369,78 @@
     }
 </style>
 
-<div class="page-header">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
+<div class="task-board-container">
+    <div class="task-board-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="btn-menu" onclick="toggleSidebar()" title="منو اصلی">
+                <i class="bi bi-layout-sidebar"></i>
+            </div>
+            <div class="btn-menu" onclick="toggleMenu()" title="منو">
+                <i class="bi bi-list"></i>
+                <div class="menu-dropdown" id="mainMenu">
+                    <button class="menu-item" onclick="showArchivedTasks()">
+                        <i class="bi bi-archive"></i>
+                        <span>تسک‌های آرشیو شده</span>
+                    </button>
+                    <button class="menu-item" onclick="exportTasks()">
+                        <i class="bi bi-download"></i>
+                        <span>خروجی Excel</span>
+                    </button>
+                    <button class="menu-item" onclick="showTaskStats()">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>آمار تسک‌ها</span>
+                    </button>
+                    <div style="height: 1px; background: #e5e7eb; margin: 4px 12px;"></div>
+                    <button class="menu-item" onclick="showSettings()">
+                        <i class="bi bi-gear"></i>
+                        <span>تنظیمات</span>
+                    </button>
+                </div>
+            </div>
             <h1 class="page-title">
                 <i class="bi bi-kanban-fill" style="color: #6366f1;"></i>
                 بورد مدیریت تسک‌ها
             </h1>
-            <p class="page-subtitle">نمای کلی وضعیت تسک‌ها و مدیریت سریع عملیات</p>
         </div>
-        <button type="button" class="btn-new-task" onclick="createTask()">
-            <i class="bi bi-plus"></i> تسک جدید
-        </button>
+        <div class="filter-section" style="display: flex; align-items: center; gap: 12px;">
+            <label for="assigneeFilter" style="font-size: 13px; color: #6b7280;">فیلتر بر اساس انجام دهنده:</label>
+            <select id="assigneeFilter" onchange="filterByAssignee()" style="border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 12px; font-size: 13px; min-width: 150px;">
+                <option value="">همه کاربران</option>
+                @if(ViewBag.Users != null)
+                {
+                    @foreach(var user in ViewBag.Users)
+                    {
+                        <option value="@user.Id">@user.FullName</option>
+                    }
+                }
+                else
+                {
+                    <option value="" disabled>هیچ کاربری یافت نشد</option>
+                }
+            </select>
+            @* Debug info *@
+            <small style="color: #999;">
+                @if(ViewBag.Users != null)
+                {
+                    <span>(@(((IEnumerable<dynamic>)ViewBag.Users).Count()) کاربر)</span>
+                }
+                else
+                {
+                    <span>(ViewBag.Users is null)</span>
+                }
+            </small>
+        </div>
+        <div class="quick-actions">
+            <button type="button" class="btn-fullscreen" onclick="toggleFullscreen()" title="تمام صفحه">
+                <i class="bi bi-fullscreen"></i>
+            </button>
+            <button type="button" class="btn-new-task" onclick="createTask()">
+                <i class="bi bi-plus"></i> تسک جدید
+            </button>
+        </div>
     </div>
-</div>
 
-
-
-<div class="kanban-container">
+    <div class="kanban-container">
     <!-- شروع نشده -->
     <div class="kanban-column" data-status="NotStarted">
         <div class="column-header">
@@ -174,6 +451,38 @@
             <span class="column-count">@notStartedTasks.Count</span>
         </div>
         <div class="column-body">
+            <button class="add-task-trigger" onclick="showQuickAdd(this, 'NotStarted')">
+                <i class="bi bi-plus"></i>
+                افزودن تسک سریع
+            </button>
+            <div class="quick-add-form">
+                <input type="text" class="quick-add-input" placeholder="عنوان تسک..." maxlength="100">
+                <select class="quick-add-project" style="margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    @if (ViewBag.UserProjects != null)
+                    {
+                        @foreach (var project in ViewBag.UserProjects)
+                        {
+                            var isSelected = ViewBag.DefaultProjectId != null && ViewBag.DefaultProjectId.Equals(project.Id);
+                            @if (isSelected)
+                            {
+                                <option value="@project.Id" selected>@project.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@project.Id">@project.Name</option>
+                            }
+                        }
+                    }
+                </select>
+                <div class="quick-add-actions">
+                    <button class="btn-quick btn-quick-save" onclick="saveQuickTask(this, 'NotStarted')">
+                        <i class="bi bi-check"></i> ذخیره
+                    </button>
+                    <button class="btn-quick btn-quick-cancel" onclick="hideQuickAdd(this)">
+                        <i class="bi bi-x"></i> انصراف
+                    </button>
+                </div>
+            </div>
             @foreach (var task in notStartedTasks)
             {
                 await Html.RenderPartialAsync("_TaskCard", task);
@@ -191,6 +500,38 @@
             <span class="column-count">@inProgressTasks.Count</span>
         </div>
         <div class="column-body">
+            <button class="add-task-trigger" onclick="showQuickAdd(this, 'InProgress')">
+                <i class="bi bi-plus"></i>
+                افزودن تسک سریع
+            </button>
+            <div class="quick-add-form">
+                <input type="text" class="quick-add-input" placeholder="عنوان تسک..." maxlength="100">
+                <select class="quick-add-project" style="margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    @if (ViewBag.UserProjects != null)
+                    {
+                        @foreach (var project in ViewBag.UserProjects)
+                        {
+                            var isSelected = ViewBag.DefaultProjectId != null && ViewBag.DefaultProjectId.Equals(project.Id);
+                            @if (isSelected)
+                            {
+                                <option value="@project.Id" selected>@project.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@project.Id">@project.Name</option>
+                            }
+                        }
+                    }
+                </select>
+                <div class="quick-add-actions">
+                    <button class="btn-quick btn-quick-save" onclick="saveQuickTask(this, 'InProgress')">
+                        <i class="bi bi-check"></i> ذخیره
+                    </button>
+                    <button class="btn-quick btn-quick-cancel" onclick="hideQuickAdd(this)">
+                        <i class="bi bi-x"></i> انصراف
+                    </button>
+                </div>
+            </div>
             @foreach (var task in inProgressTasks)
             {
                 await Html.RenderPartialAsync("_TaskCard", task);
@@ -208,6 +549,38 @@
             <span class="column-count">@completedTasks.Count</span>
         </div>
         <div class="column-body">
+            <button class="add-task-trigger" onclick="showQuickAdd(this, 'Completed')">
+                <i class="bi bi-plus"></i>
+                افزودن تسک سریع
+            </button>
+            <div class="quick-add-form">
+                <input type="text" class="quick-add-input" placeholder="عنوان تسک..." maxlength="100">
+                <select class="quick-add-project" style="margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    @if (ViewBag.UserProjects != null)
+                    {
+                        @foreach (var project in ViewBag.UserProjects)
+                        {
+                            var isSelected = ViewBag.DefaultProjectId != null && ViewBag.DefaultProjectId.Equals(project.Id);
+                            @if (isSelected)
+                            {
+                                <option value="@project.Id" selected>@project.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@project.Id">@project.Name</option>
+                            }
+                        }
+                    }
+                </select>
+                <div class="quick-add-actions">
+                    <button class="btn-quick btn-quick-save" onclick="saveQuickTask(this, 'Completed')">
+                        <i class="bi bi-check"></i> ذخیره
+                    </button>
+                    <button class="btn-quick btn-quick-cancel" onclick="hideQuickAdd(this)">
+                        <i class="bi bi-x"></i> انصراف
+                    </button>
+                </div>
+            </div>
             @foreach (var task in completedTasks)
             {
                 await Html.RenderPartialAsync("_TaskCard", task);
@@ -237,6 +610,149 @@
 
 @section Scripts {
     <script>
+        // --- Fullscreen functionality ---
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('Error entering fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Update fullscreen button icon
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.querySelector('.btn-fullscreen i');
+            if (btn) {
+                btn.className = document.fullscreenElement ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen';
+            }
+        });
+
+        // --- Quick Add functionality ---
+        function showQuickAdd(trigger, status) {
+            // Hide trigger button
+            trigger.style.display = 'none';
+            
+            // Show form
+            const form = trigger.nextElementSibling;
+            form.classList.add('active');
+            
+            // Focus input
+            const input = form.querySelector('.quick-add-input');
+            input.focus();
+            
+            // Handle Enter key
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveQuickTask(form.querySelector('.btn-quick-save'), status);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    hideQuickAdd(form.querySelector('.btn-quick-cancel'));
+                }
+            }, { once: true });
+        }
+
+        function hideQuickAdd(cancelBtn) {
+            const form = cancelBtn.closest('.quick-add-form');
+            const trigger = form.previousElementSibling;
+            
+            // Clear input
+            form.querySelector('.quick-add-input').value = '';
+            
+            // Hide form
+            form.classList.remove('active');
+            
+            // Show trigger
+            trigger.style.display = 'flex';
+        }
+
+        async function saveQuickTask(saveBtn, status) {
+            const form = saveBtn.closest('.quick-add-form');
+            const input = form.querySelector('.quick-add-input');
+            const projectSelect = form.querySelector('.quick-add-project');
+            const title = input.value.trim();
+            const projectId = projectSelect?.value;
+            
+            if (!title) {
+                input.focus();
+                return;
+            }
+
+            // Since we auto-select a default project, this should rarely happen
+            if (!projectId) {
+                alert('پروژه‌ای انتخاب نشده است. لطفا یک پروژه انتخاب کنید.');
+                projectSelect.focus();
+                return;
+            }
+            
+            // Disable form during save
+            saveBtn.disabled = true;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> در حال ذخیره...';
+            
+            try {
+                // Get anti-forgery token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('status', status);
+                formData.append('projectId', projectId);
+                if (token) formData.append('__RequestVerificationToken', token);
+                
+                const resp = await fetch('@Url.Action("QuickCreate")', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                
+                if (!resp.ok) throw new Error('Network response was not ok');
+                
+                const contentType = resp.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const json = await resp.json();
+                    if (json.success) {
+                        showNotification(json.message || 'تسک با موفقیت ایجاد شد', 'success');
+                        location.reload(); // Simple reload for now
+                    } else {
+                        throw new Error(json.message || 'خطا در ایجاد تسک');
+                    }
+                } else {
+                    // Assume HTML response contains the new task card
+                    const html = await resp.text();
+                    
+                    // Insert the new task card
+                    const column = form.closest('.kanban-column');
+                    const columnBody = column.querySelector('.column-body');
+                    
+                    // Create temporary container to parse HTML
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    const newCard = temp.firstElementChild;
+                    
+                    // Insert after the quick-add form
+                    columnBody.insertBefore(newCard, form.nextSibling);
+                    
+                    // Re-initialize drag and drop for new card
+                    initDragAndDrop();
+                    refreshCounters();
+                    
+                    // Hide form
+                    hideQuickAdd(form.querySelector('.btn-quick-cancel'));
+                    
+                    showNotification('تسک با موفقیت ایجاد شد', 'success');
+                }
+            } catch (error) {
+                console.error('Error creating quick task:', error);
+                showNotification(error.message || 'خطا در ایجاد تسک', 'error');
+            } finally {
+                // Re-enable form
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
         // --- Vanilla JS (no jQuery) implementation ---
         async function createTask() {
             try {
@@ -500,5 +1016,90 @@
             `.task-card.dragging{opacity:.5}`+
             `.quick-add-bar input:focus{box-shadow:none}`;
         document.head.appendChild(style);
+
+        // Menu functions
+        function toggleMenu() {
+            const menu = document.getElementById('mainMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mainMenu');
+            const menuBtn = document.querySelector('.btn-menu');
+            
+            if (!menuBtn.contains(event.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        function showArchivedTasks() {
+            window.location.href = '@Url.Action("Archive", "Tasks")';
+        }
+
+        function exportTasks() {
+            window.location.href = '@Url.Action("Export", "Tasks")';
+        }
+
+        function showTaskStats() {
+            alert('آمار تسک‌ها - این قابلیت در آینده اضافه خواهد شد');
+        }
+
+        function showSettings() {
+            alert('تنظیمات - این قابلیت در آینده اضافه خواهد شد');
+        }
+
+        function toggleSidebar() {
+            // Navigate to main layout with sidebar
+            window.location.href = '@Url.Action("Index", "Home")';
+        }
+
+        function filterByAssignee() {
+            const selectedUserId = document.getElementById('assigneeFilter').value;
+            const taskCards = document.querySelectorAll('.task-card');
+            
+            taskCards.forEach(card => {
+                const assigneeId = card.getAttribute('data-assignee-id');
+                
+                if (selectedUserId === '' || assigneeId === selectedUserId) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Update column counts
+            updateColumnCounts();
+        }
+
+        function updateColumnCounts() {
+            const columns = document.querySelectorAll('.kanban-column');
+            
+            columns.forEach(column => {
+                const visibleTasks = column.querySelectorAll('.task-card:not([style*="display: none"])').length;
+                const countElement = column.querySelector('.column-count');
+                if (countElement) {
+                    countElement.textContent = visibleTasks;
+                }
+            });
+        }
     </script>
 }
+
+<!-- Edit Task Modal -->
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Content will be loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Content will be loaded via AJAX -->
+        </div>
+    </div>
+</div>

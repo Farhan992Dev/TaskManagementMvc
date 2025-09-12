@@ -38,6 +38,10 @@ namespace TaskManagementMvc.Models
         public const string ChangeTaskStatus = "ChangeTaskStatus";
         public const string ViewArchivedTasks = "ViewArchivedTasks";
         public const string ManageTaskAttachments = "ManageTaskAttachments";
+        
+        // Legacy permissions for backward compatibility
+        public const string TasksView = "Tasks.View";
+        public const string TasksEdit = "Tasks.Edit";
 
         // User Management - بر اساس سطح نقش
         public const string ViewUsers = "ViewUsers";
