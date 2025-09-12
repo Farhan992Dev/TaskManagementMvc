@@ -438,7 +438,7 @@ namespace TaskManagementMvc.Controllers
                     existingProject.Budget = vm.Budget;
                     existingProject.ActualCost = vm.ActualCost;
                     existingProject.Priority = vm.Priority;
-                    existingProject.Status = vm.Status;
+                    existingProject.Status = vm.Status ?? ProjectStatus.Active;
                     existingProject.CompanyId = User.IsInRole(Roles.SystemAdmin) ? vm.CompanyId : user!.CompanyId!.Value;
                     existingProject.ProjectManagerId = vm.ProjectManagerId;
                     existingProject.UpdatedAt = DateTime.Now;

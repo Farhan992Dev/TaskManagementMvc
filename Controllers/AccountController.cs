@@ -22,7 +22,7 @@ namespace TaskManagementMvc.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login(string returnUrl = null)
+        public IActionResult Login(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             return View();
@@ -30,7 +30,7 @@ namespace TaskManagementMvc.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
 
@@ -161,5 +161,53 @@ namespace TaskManagementMvc.Controllers
 
         [Display(Name = "مرا به خاطر بسپار")]
         public bool RememberMe { get; set; }
+    }
+
+    public class RegisterViewModel
+    {
+        [Required(ErrorMessage = "نام کاربری الزامی است")]
+        [Display(Name = "نام کاربری")]
+        public string UserName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "ایمیل الزامی است")]
+        [EmailAddress(ErrorMessage = "فرمت ایمیل صحیح نیست")]
+        [Display(Name = "ایمیل")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "نام کامل الزامی است")]
+        [Display(Name = "نام کامل")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Phone(ErrorMessage = "فرمت شماره تلفن صحیح نیست")]
+        [Display(Name = "شماره تلفن")]
+        public string? PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "رمز عبور الزامی است")]
+        [StringLength(100, ErrorMessage = "رمز عبور باید حداقل {2} کاراکتر باشد", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "رمز عبور")]
+        public string Password { get; set; } = string.Empty;
+
+        [DataType(DataType.Password)]
+        [Display(Name = "تأیید رمز عبور")]
+        [Compare("Password", ErrorMessage = "رمز عبور و تأیید آن مطابقت ندارند")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "نام شرکت الزامی است")]
+        [Display(Name = "نام شرکت")]
+        public string CompanyName { get; set; } = string.Empty;
+
+        [Display(Name = "توضیحات شرکت")]
+        public string? CompanyDescription { get; set; }
+
+        [Display(Name = "یادداشت‌ها")]
+        public string? Notes { get; set; }
+
+        // Properties expected by RegisterPipeline
+        [Display(Name = "توضیحات")]
+        public string? Description => CompanyDescription;
+
+        [Display(Name = "تلفن")]
+        public string? Phone => PhoneNumber;
     }
 }

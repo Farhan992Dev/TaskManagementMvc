@@ -22,7 +22,7 @@ namespace TaskManagementMvc.Data
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<InvoiceEmailLog> InvoiceEmailLogs { get; set; }
         public DbSet<InvoiceTelegramLog> InvoiceTelegramLogs { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
+        public new DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Company> Companies { get; set; }
