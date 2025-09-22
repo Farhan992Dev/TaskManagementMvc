@@ -50,6 +50,20 @@
                 <td style="border:1px solid #ccc">IR @g.Iban</td>
                 <td style="border:1px solid #ccc">@g.Card</td>
             </tr>
+            <tr>
+                <td colspan="4" style="border:1px solid #eee; background:#fcfcfc; padding:8px 16px; text-align:right">
+                    <div style="font-weight:bold; color:#444; margin-bottom:4px">جزئیات تسک‌های انجام شده:</div>
+                    <ul style="margin:0; padding-right:18px; list-style-type:disc">
+                    @foreach (var l in Model.Lines.Where(x => (x.TaskItem?.Performer?.FullName ?? x.PerformerName ?? "نامشخص") == g.Name))
+                    {
+                        <li style="margin:2px 0">
+                            <span style="color:#222">عنوان:</span> <strong>@(l.TaskItem?.Title ?? "بدون عنوان")</strong>
+                            <span style="margin-right:12px; color:#666">هزینه:</span> <strong>@toman(l.Amount)</strong>
+                        </li>
+                    }
+                    </ul>
+                </td>
+            </tr>
         }
             <tr style="font-weight:bold;background:#fafafa;text-align:center">
                 <td style="border:1px solid #ccc">جمع کل</td>

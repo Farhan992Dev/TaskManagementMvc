@@ -8,7 +8,7 @@
     <corp-btn variant="primary" icon="bi-plus" asp-action="Create" dense>صورتحساب جدید</corp-btn>
 </div>
 
-<corp-table headers="شناسه,تاریخ,ایمیل,مبلغ,عملیات" striped hover dense caption="لیست صورتحساب‌ها">
+<corp-table headers="شناسه,تاریخ,ایمیل,مبلغ,وضعیت,عملیات" striped hover dense caption="لیست صورتحساب‌ها">
 @foreach (var i in Model)
 {
     <tr>
@@ -16,6 +16,23 @@
         <td>@i.InvoiceDate.ToPersianDate()</td>
         <td>@i.CustomerEmail</td>
         <td>@(i.Lines?.Sum(l => l.Amount) ?? 0).ToString("C")</td>
+        <td>
+            @switch (i.Status)
+            {
+                case TaskManagementMvc.Models.InvoiceStatus.Draft:
+                    <corp-badge variant="secondary" icon="bi-file-earmark" dense>پیش‌نویس</corp-badge>
+                    break;
+                case TaskManagementMvc.Models.InvoiceStatus.Sent:
+                    <corp-badge variant="info" icon="bi-send" dense>ارسال شده</corp-badge>
+                    break;
+                case TaskManagementMvc.Models.InvoiceStatus.Paid:
+                    <corp-badge variant="success" icon="bi-check-circle" dense>پرداخت شده</corp-badge>
+                    break;
+                case TaskManagementMvc.Models.InvoiceStatus.Cancelled:
+                    <corp-badge variant="danger" icon="bi-x-circle" dense>لغو شده</corp-badge>
+                    break;
+            }
+        </td>
         <td class="text-nowrap">
             <corp-btn variant="outline" icon="bi-eye" asp-action="Details" asp-route-id="@i.Id" dense>جزئیات</corp-btn>
         </td>

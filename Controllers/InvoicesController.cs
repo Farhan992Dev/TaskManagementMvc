@@ -613,5 +613,83 @@ namespace TaskManagementMvc.Controllers
 
             return await tasksQuery.ToListAsync();
         }
+
+        // POST: Invoices/Cancel/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = Permissions.CreateInvoices)]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            Invoice? invoice;
+
+            if (User.IsInRole(Roles.SystemAdmin))
+            {
+                // Admin can cancel any invoice
+                invoice = await _context.Invoices
+                    .Include(i => i.Lines)
+                        .ThenInclude(l => l.TaskItem)
+                    .FirstOrDefaultAsync(i => i.Id == id);
+            }
+            else if (user?.CompanyId != null)
+            {
+                // Company users can only cancel their company's invoices
+                invoice = await _context.Invoices
+                    .Include(i => i.Project)
+                    .Include(i => i.Lines)
+                        .ThenInclude(l => l.TaskItem)
+                    .FirstOrDefaultAsync(i => i.Id == id && i.Project.CompanyId == user.CompanyId);
+            }
+            else
+            {
+                return Forbid();
+            }
+
+            if (invoice == null)
+            {
+                return NotFound();
+            }
+
+            // Check if invoice is already cancelled
+            if (invoice.Status == InvoiceStatus.Cancelled)
+            {
+                TempData["ErrorMessage"] = "این فاکتور قبلاً لغو شده است.";
+                return RedirectToAction(nameof(Details), new { id = id });
+            }
+
+            // Check if invoice can be cancelled (not paid)
+            if (invoice.Status == InvoiceStatus.Paid)
+            {
+                TempData["ErrorMessage"] = "فاکتور پرداخت شده را نمی‌توان لغو کرد.";
+                return RedirectToAction(nameof(Details), new { id = id });
+            }
+
+            try
+            {
+                // Change invoice status to cancelled
+                invoice.Status = InvoiceStatus.Cancelled;
+                invoice.UpdatedAt = DateTime.Now;
+                invoice.UpdatedById = user.Id;
+
+                // Return all tasks in this invoice back to Completed status
+                foreach (var line in invoice.Lines)
+                {
+                    if (line.TaskItem != null)
+                    {
+                        line.TaskItem.Status = TaskStatus.Completed;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "فاکتور با موفقیت لغو شد و تسک‌ها به وضعیت تکمیل شده برگشتند.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "خطا در لغو فاکتور: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(Details), new { id = id });
+        }
     }
 }

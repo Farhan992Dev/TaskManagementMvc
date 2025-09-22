@@ -23,6 +23,22 @@
                     <h4 class="mb-0 d-flex align-items-center gap-2">
                         <i class="bi bi-receipt"></i>
                         صورتحساب شماره @Model.Id
+                        @* نمایش وضعیت فاکتور *@
+                        @switch (Model.Status)
+                        {
+                            case TaskManagementMvc.Models.InvoiceStatus.Draft:
+                                <corp-badge variant="secondary" icon="bi-file-earmark" dense>پیش‌نویس</corp-badge>
+                                break;
+                            case TaskManagementMvc.Models.InvoiceStatus.Sent:
+                                <corp-badge variant="info" icon="bi-send" dense>ارسال شده</corp-badge>
+                                break;
+                            case TaskManagementMvc.Models.InvoiceStatus.Paid:
+                                <corp-badge variant="success" icon="bi-check-circle" dense>پرداخت شده</corp-badge>
+                                break;
+                            case TaskManagementMvc.Models.InvoiceStatus.Cancelled:
+                                <corp-badge variant="danger" icon="bi-x-circle" dense>لغو شده</corp-badge>
+                                break;
+                        }
                     </h4>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <div class="d-flex flex-column gap-2 align-items-end">
@@ -34,11 +50,31 @@
                             {
                                 <corp-badge variant="outline" icon="bi-envelope" dense>ایمیل ارسال نشده</corp-badge>
                             }
-                            <form asp-action="SendEmail" asp-controller="Invoices" method="post" class="m-0 d-flex align-items-center gap-2 flex-wrap">
-                                <input type="hidden" name="id" value="@Model.Id" />
-                                <input type="email" name="customerEmail" value="@Model.CustomerEmail" class="form-control form-control-sm" placeholder="ایمیل گیرنده" required />
-                                <corp-btn variant="secondary" icon="bi-envelope" dense type="submit">ارسال ایمیل</corp-btn>
-                            </form>
+                            
+                            @* نمایش دکمه‌ها فقط برای فاکتورهای غیر لغو شده *@
+                            @if (Model.Status != TaskManagementMvc.Models.InvoiceStatus.Cancelled)
+                            {
+                                <div class="d-flex gap-2 align-items-center flex-wrap">
+                                    <form asp-action="SendEmail" asp-controller="Invoices" method="post" class="m-0 d-flex align-items-center gap-2 flex-wrap">
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="email" name="customerEmail" value="@Model.CustomerEmail" class="form-control form-control-sm" placeholder="ایمیل گیرنده" required />
+                                        <corp-btn variant="secondary" icon="bi-envelope" dense type="submit">ارسال ایمیل</corp-btn>
+                                    </form>
+                                    
+                                    @* دکمه لغو فاکتور فقط برای فاکتورهای غیر پرداخت شده *@
+                                    @if (Model.Status != TaskManagementMvc.Models.InvoiceStatus.Paid)
+                                    {
+                                        <form asp-action="Cancel" asp-controller="Invoices" method="post" class="m-0" onsubmit="return confirm('آیا از لغو این فاکتور اطمینان دارید؟ تسک‌های داخل فاکتور به وضعیت تکمیل شده برمی‌گردند.');">
+                                            <input type="hidden" name="id" value="@Model.Id" />
+                                            <corp-btn variant="danger" icon="bi-x-circle" dense type="submit">لغو فاکتور</corp-btn>
+                                        </form>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <corp-badge variant="danger" icon="bi-exclamation-triangle" dense>این فاکتور لغو شده است</corp-badge>
+                            }
                         </div>
                     </div>
                 </div>
