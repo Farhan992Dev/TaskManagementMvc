@@ -288,5 +288,46 @@ namespace TaskManagementMvc.Controllers
 
             return RedirectToAction(nameof(Analytics));
         }
+
+        // GET: Admin/JuleSettings
+        public IActionResult JuleSettings()
+        {
+            var model = new JuleSettingsViewModel
+            {
+                ApiKey = _configuration["Jule:ApiKey"]
+            };
+            return View(model);
+        }
+
+        // POST: Admin/JuleSettings
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> JuleSettings(JuleSettingsViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+                var json = System.IO.File.ReadAllText(appSettingsPath);
+                dynamic jsonObj = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+
+                jsonObj["Jule"]["ApiKey"] = model.ApiKey;
+
+                string output = Newtonsoft.Json.JsonConvert.SerializeObject(jsonObj, Newtonsoft.Json.Formatting.Indented);
+                System.IO.File.WriteAllText(appSettingsPath, output);
+
+                TempData["SuccessMessage"] = "Jule settings saved successfully. Please restart the application for the changes to take effect.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error saving Jule settings: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(JuleSettings));
+        }
     }
 }

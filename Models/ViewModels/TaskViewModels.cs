@@ -29,5 +29,6 @@ namespace TaskManagementMvc.Models.ViewModels
 		public List<SelectListItem> Companies { get; set; } = new List<SelectListItem>();
         public List<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
         public List<TaskHistory> HistoryEntries { get; set; } = new List<TaskHistory>();
+        public string? JuleSessionId { get; set; }
     }
 }

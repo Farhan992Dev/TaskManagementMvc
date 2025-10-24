@@ -495,6 +495,9 @@ namespace TaskManagementMvc.Migrations
                     b.Property<int?>("UpdatedById")
                         .HasColumnType("int");
 
+                    b.Property<string>("JuleSessionId")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");

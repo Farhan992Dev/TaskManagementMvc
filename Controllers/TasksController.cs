@@ -7,7 +7,10 @@ using TaskManagementMvc.Data;
 using TaskManagementMvc.Models;
 using TaskManagementMvc.Models.ViewModels;
 using TaskManagementMvc.Services;
+using TaskManagementMvc.Services.Jule;
 using TaskStatus = TaskManagementMvc.Models.TaskStatus;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 namespace TaskManagementMvc.Controllers
 {
@@ -17,6 +20,8 @@ namespace TaskManagementMvc.Controllers
         private readonly TaskManagementContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IScalableNotificationService _notificationService;
+        private readonly JuleApiClient _juleApiClient;
+        private readonly IOptions<JuleSettings> _juleSettings;
         
         private async Task<ApplicationUser> GetCurrentUserOrThrow()
         {
@@ -34,11 +39,15 @@ namespace TaskManagementMvc.Controllers
         public TasksController(
             TaskManagementContext context,
             UserManager<ApplicationUser> userManager,
-            IScalableNotificationService notificationService)
+            IScalableNotificationService notificationService,
+            JuleApiClient juleApiClient,
+            IOptions<JuleSettings> juleSettings)
         {
             _context = context;
             _userManager = userManager;
             _notificationService = notificationService;
+            _juleApiClient = juleApiClient;
+            _juleSettings = juleSettings;
         }
 
         // GET: Tasks
@@ -650,7 +659,8 @@ namespace TaskManagementMvc.Controllers
                 Projects = (await GetProjectsForUser()).Select(p => new SelectListItem(p.Name, p.Id.ToString(), p.Id == task.ProjectId)).ToList(),
                 Companies = (await GetCompaniesForUser()).Select(c => new SelectListItem(c.Name, c.Id.ToString(), c.Id == task.Project?.CompanyId)).ToList(),
                 Attachments = task.Attachments?.ToList() ?? new List<TaskAttachment>(),
-                HistoryEntries = task.HistoryEntries?.ToList() ?? new List<TaskHistory>()
+                HistoryEntries = task.HistoryEntries?.ToList() ?? new List<TaskHistory>(),
+                JuleSessionId = task.JuleSessionId
             };
 
             // Check if this is an AJAX request
@@ -2194,6 +2204,60 @@ namespace TaskManagementMvc.Controllers
                 TaskStatus.Completed => "تکمیل شده",
                 _ => status.ToString()
             };
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetJuleSources()
+        {
+            try
+            {
+                var sourcesJson = await _juleApiClient.ListSourcesAsync(_juleSettings.Value.ApiKey);
+                var sources = JsonConvert.DeserializeObject<dynamic>(sourcesJson);
+                return Json(sources.sources);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendToJule([FromBody] SendToJuleViewModel model)
+        {
+            var task = await _context.Tasks.FindAsync(model.Id);
+            if (task == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var sessionJson = await _juleApiClient.CreateSessionAsync(_juleSettings.Value.ApiKey, model.Source, task.Title, model.Prompt);
+                var session = JsonConvert.DeserializeObject<dynamic>(sessionJson);
+                task.JuleSessionId = session.id;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, sessionId = task.JuleSessionId });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetJuleSessionStatus(string sessionId)
+        {
+            try
+            {
+                var sessionJson = await _juleApiClient.GetSessionAsync(_juleSettings.Value.ApiKey, sessionId);
+                var session = JsonConvert.DeserializeObject<dynamic>(sessionJson);
+                return Json(session);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
     }
 

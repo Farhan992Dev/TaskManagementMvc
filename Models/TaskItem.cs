@@ -54,6 +54,8 @@ namespace TaskManagementMvc.Models
         [Display(Name = "آرشیو شده توسط")]
         public string? ArchivedBy { get; set; }
 
+        public string? JuleSessionId { get; set; }
+
         // Foreign Keys
         [Display(Name = "انجام‌دهنده")]
         public int? PerformerId { get; set; }
