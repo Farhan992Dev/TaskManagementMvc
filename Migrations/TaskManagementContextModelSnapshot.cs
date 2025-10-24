@@ -1652,6 +1652,29 @@ namespace TaskManagementMvc.Migrations
 
                     b.Navigation("HistoryEntries");
                 });
+
+            modelBuilder.Entity("TaskManagementMvc.Models.Setting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Settings");
+                });
 #pragma warning restore 612, 618
         }
     }

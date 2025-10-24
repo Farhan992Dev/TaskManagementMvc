@@ -21,7 +21,6 @@ namespace TaskManagementMvc.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IScalableNotificationService _notificationService;
         private readonly JuleApiClient _juleApiClient;
-        private readonly IOptions<JuleSettings> _juleSettings;
         
         private async Task<ApplicationUser> GetCurrentUserOrThrow()
         {
@@ -40,14 +39,12 @@ namespace TaskManagementMvc.Controllers
             TaskManagementContext context,
             UserManager<ApplicationUser> userManager,
             IScalableNotificationService notificationService,
-            JuleApiClient juleApiClient,
-            IOptions<JuleSettings> juleSettings)
+            JuleApiClient juleApiClient)
         {
             _context = context;
             _userManager = userManager;
             _notificationService = notificationService;
             _juleApiClient = juleApiClient;
-            _juleSettings = juleSettings;
         }
 
         // GET: Tasks
@@ -359,7 +356,7 @@ namespace TaskManagementMvc.Controllers
             // Check if this is an AJAX request
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
-                return PartialView("_CreateTaskModal", vm);
+                return PartialView("_TaskFormModal", vm);
             }
 
             return View(vm);
@@ -388,7 +385,7 @@ namespace TaskManagementMvc.Controllers
                         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                         {
                             Response.StatusCode = 400;
-                            return PartialView("_CreateTaskModal", vm);
+                            return PartialView("_TaskFormModal", vm);
                         }
                         return View(vm);
                     }
@@ -425,7 +422,7 @@ namespace TaskManagementMvc.Controllers
                             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                             {
                                 Response.StatusCode = 400;
-                                return PartialView("_CreateTaskModal", vm);
+                                return PartialView("_TaskFormModal", vm);
                             }
                             return View(vm);
                         }
@@ -605,7 +602,7 @@ namespace TaskManagementMvc.Controllers
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 Response.StatusCode = 400; // Bad Request for validation errors
-                return PartialView("_CreateTaskModal", vm);
+                return PartialView("_TaskFormModal", vm);
             }
 
             return View(vm);
@@ -659,15 +656,14 @@ namespace TaskManagementMvc.Controllers
                 Projects = (await GetProjectsForUser()).Select(p => new SelectListItem(p.Name, p.Id.ToString(), p.Id == task.ProjectId)).ToList(),
                 Companies = (await GetCompaniesForUser()).Select(c => new SelectListItem(c.Name, c.Id.ToString(), c.Id == task.Project?.CompanyId)).ToList(),
                 Attachments = task.Attachments?.ToList() ?? new List<TaskAttachment>(),
-                HistoryEntries = task.HistoryEntries?.ToList() ?? new List<TaskHistory>(),
-                JuleSessionId = task.JuleSessionId
+                HistoryEntries = task.HistoryEntries?.ToList() ?? new List<TaskHistory>()
             };
 
             // Check if this is an AJAX request
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 // Return the modal partial for in-place editing
-                return PartialView("_EditTaskModal", vm);
+                return PartialView("_TaskFormModal", vm);
             }
 
             return View(vm);
@@ -905,7 +901,7 @@ namespace TaskManagementMvc.Controllers
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 Response.StatusCode = 400; // Bad Request
-                return PartialView("_EditTaskModal", vm);
+                return PartialView("_TaskFormModal", vm);
             }
 
             return View(vm);
@@ -2211,7 +2207,12 @@ namespace TaskManagementMvc.Controllers
         {
             try
             {
-                var sourcesJson = await _juleApiClient.ListSourcesAsync(_juleSettings.Value.ApiKey);
+                var apiKey = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == "JuleApiKey"))?.Value;
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    return StatusCode(500, new { message = "Jule API key is not configured." });
+                }
+                var sourcesJson = await _juleApiClient.ListSourcesAsync(apiKey);
                 var sources = JsonConvert.DeserializeObject<dynamic>(sourcesJson);
                 return Json(sources.sources);
             }
@@ -2233,7 +2234,12 @@ namespace TaskManagementMvc.Controllers
 
             try
             {
-                var sessionJson = await _juleApiClient.CreateSessionAsync(_juleSettings.Value.ApiKey, model.Source, task.Title, model.Prompt);
+                var apiKey = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == "JuleApiKey"))?.Value;
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    return StatusCode(500, new { message = "Jule API key is not configured." });
+                }
+                var sessionJson = await _juleApiClient.CreateSessionAsync(apiKey, model.Source, task.Title, model.Prompt);
                 var session = JsonConvert.DeserializeObject<dynamic>(sessionJson);
                 task.JuleSessionId = session.id;
                 await _context.SaveChangesAsync();
@@ -2250,7 +2256,12 @@ namespace TaskManagementMvc.Controllers
         {
             try
             {
-                var sessionJson = await _juleApiClient.GetSessionAsync(_juleSettings.Value.ApiKey, sessionId);
+                var apiKey = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == "JuleApiKey"))?.Value;
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    return StatusCode(500, new { message = "Jule API key is not configured." });
+                }
+                var sessionJson = await _juleApiClient.GetSessionAsync(apiKey, sessionId);
                 var session = JsonConvert.DeserializeObject<dynamic>(sessionJson);
                 return Json(session);
             }

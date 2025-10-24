@@ -28,7 +28,7 @@
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-file-earmark text-muted fs-5 ms-2"></i>
                                         <div>
-                                            <span class="fw-medium attachment-item">@attachment.FileName</span>
+                                            <span class="fw-medium">@attachment.FileName</span>
                                             <small class="text-muted d-block">@((attachment.FileSize / 1024.0).ToString("F1")) KB</small>
                                         </div>
                                     </div>
@@ -110,7 +110,6 @@
                     </div>
                     <div class="mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
-                        <button type="button" class="btn btn-primary" id="send-to-jule-btn">Send to Jule</button>
                         <button type="submit" class="btn btn-warning">ذخیره تغییرات</button>
                     </div>
                 </div>
@@ -118,108 +117,3 @@
         </div>
     </div>
 </form>
-
-<div id="jule-progress-section" class="mt-4" style="display: none;">
-    <h5>Jule Task Progress</h5>
-    <p>Status: <span id="jule-status"></span></p>
-    <button id="refresh-jule-status" class="btn btn-secondary">Refresh Status</button>
-</div>
-
-@await Html.PartialAsync("_SendToJuleModal")
-
-@section Scripts {
-    <script>
-        document.getElementById('send-to-jule-btn').addEventListener('click', function () {
-            var myModal = new bootstrap.Modal(document.getElementById('send-to-jule-modal'), {});
-            var sourceDropdown = document.getElementById('jule-source');
-
-            // Fetch sources
-            fetch('/Tasks/GetJuleSources')
-                .then(response => response.json())
-                .then(data => {
-                    sourceDropdown.innerHTML = '';
-                    data.forEach(source => {
-                        var option = document.createElement('option');
-                        option.value = source.name;
-                        option.textContent = source.id;
-                        sourceDropdown.appendChild(option);
-                    });
-                });
-
-            // Pre-fill prompt
-            var title = document.getElementById('Title').value;
-            var description = document.getElementById('Description').value;
-            var attachments = '';
-            var attachmentElements = document.querySelectorAll('.attachment-item');
-            if (attachmentElements.length > 0) {
-                attachments = '\n\nAttachments:\n';
-                attachmentElements.forEach(function (element) {
-                    attachments += `- ${element.textContent.trim()}\n`;
-                });
-            }
-            document.getElementById('jule-prompt').value = `Title: ${title}\n\nDescription: ${description}${attachments}`;
-
-            myModal.show();
-        });
-
-        document.getElementById('send-to-jule-submit').addEventListener('click', function () {
-            var source = document.getElementById('jule-source').value;
-            var prompt = document.getElementById('jule-prompt').value;
-            var taskId = document.getElementById('Id').value;
-            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-            fetch('/Tasks/SendToJule', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({
-                    id: taskId,
-                    source: source,
-                    prompt: prompt
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Task sent to Jule successfully! Session ID: ' + data.sessionId);
-                    var myModalEl = document.getElementById('send-to-jule-modal');
-                    var modal = bootstrap.Modal.getInstance(myModalEl);
-                    modal.hide();
-                    location.reload();
-                } else {
-                    alert('Error sending task to Jule: ' + data.message);
-                }
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            var juleProgressSection = document.getElementById('jule-progress-section');
-            var juleSessionId = '@Model.JuleSessionId';
-
-            if (juleSessionId) {
-                juleProgressSection.style.display = 'block';
-                fetchJuleStatus(juleSessionId);
-            }
-
-            document.getElementById('refresh-jule-status').addEventListener('click', function () {
-                fetchJuleStatus(juleSessionId);
-            });
-        });
-
-        function fetchJuleStatus(sessionId) {
-            var statusSpan = document.getElementById('jule-status');
-            statusSpan.textContent = 'Loading...';
-
-            fetch(`/Tasks/GetJuleSessionStatus?sessionId=${sessionId}`)
-                .then(response => response.json())
-                .then(data => {
-                    statusSpan.textContent = data.state;
-                })
-                .catch(() => {
-                    statusSpan.textContent = 'Error fetching status.';
-                });
-        }
-    </script>
-}

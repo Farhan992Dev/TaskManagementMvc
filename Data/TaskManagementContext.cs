@@ -30,6 +30,7 @@ namespace TaskManagementMvc.Data
         public DbSet<ProjectAccess> ProjectAccess { get; set; }
     public DbSet<InvoiceSchedule> InvoiceSchedules { get; set; }
     public DbSet<InvoiceJobRunLog> InvoiceJobRunLogs { get; set; }
+    public DbSet<Setting> Settings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

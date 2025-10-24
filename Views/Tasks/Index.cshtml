@@ -588,6 +588,8 @@
         </div>
     </div>
 </div>
+
+@await Html.PartialAsync("_SendToJuleModal")
 </div>
 
 <!-- Create Task Modal -->
@@ -791,6 +793,43 @@
         function setupTaskForm(formSelector, modalSelector) {
             const form = document.querySelector(formSelector);
             if (!form) return;
+
+            const sendToJuleBtn = document.getElementById('send-to-jule-btn');
+            if (sendToJuleBtn) {
+                sendToJuleBtn.addEventListener('click', function () {
+                    var myModal = new bootstrap.Modal(document.getElementById('send-to-jule-modal'), {});
+                    var sourceDropdown = document.getElementById('jule-source');
+
+                    // Fetch sources
+                    fetch('/Tasks/GetJuleSources')
+                        .then(response => response.json())
+                        .then(data => {
+                            sourceDropdown.innerHTML = '';
+                            data.forEach(source => {
+                                var option = document.createElement('option');
+                                option.value = source.name;
+                                option.textContent = source.id;
+                                sourceDropdown.appendChild(option);
+                            });
+                        });
+
+                    // Pre-fill prompt
+                    var title = document.getElementById('Title').value;
+                    var description = document.getElementById('Description').value;
+                    var attachments = '';
+                    var attachmentElements = document.querySelectorAll('.attachment-item');
+                    if (attachmentElements.length > 0) {
+                        attachments = '\n\nAttachments:\n';
+                        attachmentElements.forEach(function (element) {
+                            attachments += `- ${element.textContent.trim()}\n`;
+                        });
+                    }
+                    document.getElementById('jule-prompt').value = `Title: ${title}\n\nDescription: ${description}${attachments}`;
+
+                    myModal.show();
+                });
+            }
+
             form.addEventListener('submit', async e => {
                 e.preventDefault();
                 const formData = new FormData(form);
@@ -1083,6 +1122,28 @@
                 }
             });
         }
+
+        function fetchJuleStatuses() {
+            const taskCards = document.querySelectorAll('.task-card[data-jule-session-id]');
+            taskCards.forEach(card => {
+                const sessionId = card.dataset.juleSessionId;
+                if (sessionId) {
+                    const statusSpan = card.querySelector('.jule-status');
+                    fetch(`/Tasks/GetJuleSessionStatus?sessionId=${sessionId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            statusSpan.textContent = `Jule: ${data.state}`;
+                        })
+                        .catch(() => {
+                            statusSpan.textContent = 'Jule: Error';
+                        });
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchJuleStatuses();
+        });
     </script>
 }
 
