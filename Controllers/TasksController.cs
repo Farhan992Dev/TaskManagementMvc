@@ -390,7 +390,7 @@ namespace TaskManagementMvc.Controllers
                         Description = vm.Description,
                         Status = vm.Status,
                         Priority = vm.Priority,
-                        CompletedEstimateHours = vm.Hours,
+                        CompletedEstimateHours = vm.CompletedEstimateHours,
                         OriginalEstimateHours = vm.OriginalEstimateHours,
                         StartAt = vm.StartAt,
                         EndAt = vm.EndAt,
@@ -721,9 +721,9 @@ namespace TaskManagementMvc.Controllers
                     {
                         await LogTaskChange(id, "Priority", existingTask.Priority.ToString(), vm.Priority.ToString(), user.Id);
                     }
-                    if (existingTask.CompletedEstimateHours != vm.Hours)
+                    if (existingTask.CompletedEstimateHours != vm.CompletedEstimateHours)
                     {
-                        await LogTaskChange(id, "CompletedEstimateHours", existingTask.CompletedEstimateHours.ToString(), vm.Hours.ToString(), user.Id);
+                        await LogTaskChange(id, "CompletedEstimateHours", existingTask.CompletedEstimateHours.ToString(), vm.CompletedEstimateHours.ToString(), user.Id);
                     }
                     if (existingTask.OriginalEstimateHours != vm.OriginalEstimateHours)
                     {
@@ -750,7 +750,7 @@ namespace TaskManagementMvc.Controllers
                     existingTask.Description = vm.Description;
                     existingTask.Status = vm.Status;
                     existingTask.Priority = vm.Priority;
-                    existingTask.CompletedEstimateHours = vm.Hours;
+                    existingTask.CompletedEstimateHours = vm.CompletedEstimateHours;
                     existingTask.OriginalEstimateHours = vm.OriginalEstimateHours;
                     existingTask.StartAt = vm.StartAt;
                     existingTask.EndAt = vm.EndAt;
@@ -1342,14 +1342,14 @@ namespace TaskManagementMvc.Controllers
             {
                 await LogTaskChange(model.Id, "Description", task.Description, model.Description, user.Id);
             }
-            if (task.CompletedEstimateHours != model.Hours)
+            if (task.CompletedEstimateHours != model.CompletedEstimateHours)
             {
-                await LogTaskChange(model.Id, "CompletedEstimateHours", task.CompletedEstimateHours.ToString(), model.Hours.ToString(), user.Id);
+                await LogTaskChange(model.Id, "CompletedEstimateHours", task.CompletedEstimateHours.ToString(), model.CompletedEstimateHours.ToString(), user.Id);
             }
 
             task.Title = model.Title;
             task.Description = model.Description;
-            task.CompletedEstimateHours = model.Hours;
+            task.CompletedEstimateHours = model.CompletedEstimateHours;
             task.UpdatedAt = DateTime.Now;
             task.UpdatedById = user.Id;
 
@@ -1979,9 +1979,9 @@ namespace TaskManagementMvc.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = Permissions.EditTasks)]
-        public async Task<IActionResult> SetCompletedEstimateHours(int id, double hours)
+        public async Task<IActionResult> SetCompletedEstimateHours(int id, double completedEstimateHours)
         {
-            if (hours < 0) {
+            if (completedEstimateHours < 0) {
                 await this.NotifyValidationErrorAsync("ساعت نمی‌تواند منفی باشد");
                 return BadRequest();
             }
@@ -2005,10 +2005,10 @@ namespace TaskManagementMvc.Controllers
             if (task == null) return NotFound();
 
             var old = task.CompletedEstimateHours;
-            task.CompletedEstimateHours = hours;
+            task.CompletedEstimateHours = completedEstimateHours;
             task.UpdatedAt = DateTime.Now;
             task.UpdatedById = user?.Id;
-            await LogTaskChange(id, "CompletedEstimateHours", old.ToString(), hours.ToString(), user?.Id);
+            await LogTaskChange(id, "CompletedEstimateHours", old.ToString(), completedEstimateHours.ToString(), user?.Id);
             _context.Update(task);
             await _context.SaveChangesAsync();
             return Json(new { success = true });
@@ -2302,6 +2302,6 @@ namespace TaskManagementMvc.Controllers
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public double CompletedEstimateHours { get; set; }
+        public double Hours { get; set; }
     }
 }

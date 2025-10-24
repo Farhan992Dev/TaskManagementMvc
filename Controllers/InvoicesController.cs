@@ -116,9 +116,9 @@ namespace TaskManagementMvc.Controllers
                 TaskId = t.Id,
                 Title = t.Title,
                 Description = t.Description,
-                HoursAvailable = t.CompletedEstimateHours,
+                CompletedEstimateHoursAvailable = t.CompletedEstimateHours,
                 Selected = ViewBag.SelectedTaskIds != null && ((List<int>)ViewBag.SelectedTaskIds).Contains(t.Id),
-                HoursForInvoice = t.CompletedEstimateHours,
+                CompletedEstimateHoursForInvoice = t.CompletedEstimateHours,
                 PerformerName = t.Performer?.Name,
                 StartAt = t.StartAt
             }).ToList();
@@ -212,9 +212,9 @@ namespace TaskManagementMvc.Controllers
                     TaskId = t.Id,
                     Title = t.Title,
                     Description = t.Description,
-                    HoursAvailable = t.CompletedEstimateHours,
+                    CompletedEstimateHoursAvailable = t.CompletedEstimateHours,
                     Selected = selectedTasks.Any(st => st.TaskId == t.Id),
-                    HoursForInvoice = selectedTasks.FirstOrDefault(st => st.TaskId == t.Id)?.HoursForInvoice ?? t.CompletedEstimateHours,
+                    CompletedEstimateHoursForInvoice = selectedTasks.FirstOrDefault(st => st.TaskId == t.Id)?.CompletedEstimateHoursForInvoice ?? t.CompletedEstimateHours,
                     PerformerName = t.Performer?.Name,
                     StartAt = t.StartAt
                 }).ToList();
@@ -238,7 +238,7 @@ namespace TaskManagementMvc.Controllers
             foreach (var task in taskEntities)
             {
                 var overrideVm = selectedTasks.First(st => st.TaskId == task.Id);
-                double hoursForInvoice = Math.Min(overrideVm.HoursForInvoice, task.CompletedEstimateHours); // cap at available
+                double hoursForInvoice = Math.Min(overrideVm.CompletedEstimateHoursForInvoice, task.CompletedEstimateHours); // cap at available
                 if (hoursForInvoice < 0) hoursForInvoice = 0;
                 var line = new InvoiceLine
                 {
@@ -248,7 +248,7 @@ namespace TaskManagementMvc.Controllers
                     PerformerName = task.Performer?.Name,
                     GradeName = task.Performer?.Grade?.Name,
                     HourlyRate = task.Performer?.Grade?.HourlyRate ?? 0,
-                    Hours = hoursForInvoice,
+                    CompletedEstimateHours = hoursForInvoice,
                     Amount = (task.Performer?.Grade?.HourlyRate ?? 0) * (decimal)hoursForInvoice
                 };
                 _context.InvoiceLines.Add(line);
@@ -521,7 +521,7 @@ namespace TaskManagementMvc.Controllers
                 .Select(g => new
                 {
                     Name = g.Key,
-                    Hours = g.Sum(x => x.Line.CompletedEstimateHours),
+                    CompletedEstimateHours = g.Sum(x => x.Line.CompletedEstimateHours),
                     Amount = g.Sum(x => x.Line.Amount),
                     Iban = g.Select(x => x.Performer?.IbanNumber).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty,
                     Card = g.Select(x => x.Performer?.CardNumber).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty
@@ -544,7 +544,7 @@ namespace TaskManagementMvc.Controllers
             {
                 sb.Append("<tr style='text-align:center'>");
                 sb.Append($"<td style='border:1px solid #ccc'>{System.Net.WebUtility.HtmlEncode(g.Name)}</td>");
-                sb.Append($"<td style='border:1px solid #ccc'>{g.Hours:0.##}</td>");
+                sb.Append($"<td style='border:1px solid #ccc'>{g.CompletedEstimateHours:0.##}</td>");
                 sb.Append($"<td style='border:1px solid #ccc'>{g.Amount:C}</td>");
                 sb.Append($"<td style='border:1px solid #ccc'>{System.Net.WebUtility.HtmlEncode(g.Iban)}</td>");
                 sb.Append($"<td style='border:1px solid #ccc'>{System.Net.WebUtility.HtmlEncode(g.Card)}</td>");
@@ -553,7 +553,7 @@ namespace TaskManagementMvc.Controllers
             // Total row
             sb.Append("<tr style='font-weight:bold;background:#fafafa;text-align:center'>");
             sb.Append("<td style='border:1px solid #ccc'>جمع کل</td>");
-            sb.Append($"<td style='border:1px solid #ccc'>{groups.Sum(g => g.Hours):0.##}</td>");
+            sb.Append($"<td style='border:1px solid #ccc'>{groups.Sum(g => g.CompletedEstimateHours):0.##}</td>");
             sb.Append($"<td style='border:1px solid #ccc'>{groups.Sum(g => g.Amount):C}</td>");
             sb.Append("<td style='border:1px solid #ccc'></td><td style='border:1px solid #ccc'></td>");
             sb.Append("</tr>");

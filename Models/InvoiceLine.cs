@@ -32,7 +32,7 @@ namespace TaskManagementMvc.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal HourlyRate { get; set; }
 
-        public double CompletedEstimateHours { get; set; }
+        public double Hours { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
