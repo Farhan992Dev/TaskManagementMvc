@@ -5,7 +5,6 @@ using TaskManagementMvc.Data;
 using TaskManagementMvc.Models;
 using TaskManagementMvc.Services;
 using TaskManagementMvc.Services.Authorization;
-using TaskManagementMvc.Services.Jule;
 using StackExchange.Redis;
 using TaskManagementMvc.Interceptors;
 
@@ -60,7 +59,6 @@ builder.Services.AddScoped<IRazorViewRenderer, RazorViewRenderer>();
 builder.Services.AddScoped<ProjectAccessService>();
 builder.Services.AddScoped<IInvoiceAutomationService, InvoiceAutomationService>();
 builder.Services.AddHostedService<InvoiceAutomationHostedService>();
-builder.Services.AddHttpClient<JuleApiClient>();
 
 // Configure notification settings
 builder.Services.Configure<NotificationSettings>(
@@ -69,10 +67,6 @@ builder.Services.Configure<NotificationSettings>(
 // Configure analytics settings
 builder.Services.Configure<AnalyticsOptions>(
     builder.Configuration.GetSection("Analytics"));
-
-// Configure Jule settings
-builder.Services.Configure<JuleSettings>(
-    builder.Configuration.GetSection("Jule"));
 
 // Configure Redis connection (conditionally)
 var notificationSettings = builder.Configuration.GetSection("Notifications").Get<NotificationSettings>() ?? new NotificationSettings();

@@ -4,9 +4,7 @@
 @{
     ViewData["Title"] = "بورد مدیریت تسک‌ها";
     Layout = "_LayoutFullscreen"; // Use a custom fullscreen layout
-    var notStartedTasks = Model.Where(t => t.Status == TaskStatusEnum.NotStarted).ToList();
-    var inProgressTasks = Model.Where(t => t.Status == TaskStatusEnum.InProgress).ToList();
-    var completedTasks = Model.Where(t => t.Status == TaskStatusEnum.Completed).ToList();
+    var columns = ViewBag.BoardColumns as List<TaskManagementMvc.Models.BoardColumn> ?? new List<TaskManagementMvc.Models.BoardColumn>();
 }
 
 <style>
@@ -441,155 +439,58 @@
     </div>
 
     <div class="kanban-container">
-    <!-- شروع نشده -->
-    <div class="kanban-column" data-status="NotStarted">
-        <div class="column-header">
-            <h3 class="column-title">
-                <i class="bi bi-pause-circle column-icon column-icon-not-started"></i>
-                شروع نشده
-            </h3>
-            <span class="column-count">@notStartedTasks.Count</span>
-        </div>
-        <div class="column-body">
-            <button class="add-task-trigger" onclick="showQuickAdd(this, 'NotStarted')">
-                <i class="bi bi-plus"></i>
-                افزودن تسک سریع
-            </button>
-            <div class="quick-add-form">
-                <input type="text" class="quick-add-input" placeholder="عنوان تسک..." maxlength="100">
-                <select class="quick-add-project" style="margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
-                    @if (ViewBag.UserProjects != null)
-                    {
-                        @foreach (var project in ViewBag.UserProjects)
+        @foreach (var column in columns)
+        {
+            var tasksInColumn = Model.Where(t => t.BoardColumnId == column.Id).ToList();
+            <div class="kanban-column" data-column-id="@column.Id">
+                <div class="column-header">
+                    <h3 class="column-title">
+                        @if(column.IsDoneColumn)
                         {
-                            var isSelected = ViewBag.DefaultProjectId != null && ViewBag.DefaultProjectId.Equals(project.Id);
-                            @if (isSelected)
-                            {
-                                <option value="@project.Id" selected>@project.Name</option>
-                            }
-                            else
-                            {
-                                <option value="@project.Id">@project.Name</option>
-                            }
+                            <i class="bi bi-check-circle-fill column-icon" style="color: #28a745;"></i>
                         }
+                        else
+                        {
+                            <i class="bi bi-circle column-icon" style="color: #6c757d;"></i>
+                        }
+                        @column.Name
+                    </h3>
+                    <span class="column-count">@tasksInColumn.Count</span>
+                </div>
+                <div class="column-body">
+                    <button class="add-task-trigger" onclick="showQuickAdd(this, @column.Id)">
+                        <i class="bi bi-plus"></i>
+                        افزودن تسک سریع
+                    </button>
+                    <div class="quick-add-form">
+                        <input type="text" class="quick-add-input" placeholder="عنوان تسک..." maxlength="100">
+                        <select class="quick-add-project" style="margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                            @if (ViewBag.UserProjects != null)
+                            {
+                                @foreach (var project in ViewBag.UserProjects)
+                                {
+                                    var isSelected = ViewBag.DefaultProjectId != null && ViewBag.DefaultProjectId.Equals(project.Id);
+                                    <option value="@project.Id" selected="@isSelected">@project.Name</option>
+                                }
+                            }
+                        </select>
+                        <div class="quick-add-actions">
+                            <button class="btn-quick btn-quick-save" onclick="saveQuickTask(this, @column.Id)">
+                                <i class="bi bi-check"></i> ذخیره
+                            </button>
+                            <button class="btn-quick btn-quick-cancel" onclick="hideQuickAdd(this)">
+                                <i class="bi bi-x"></i> انصراف
+                            </button>
+                        </div>
+                    </div>
+                    @foreach (var task in tasksInColumn)
+                    {
+                        await Html.RenderPartialAsync("_TaskCard", task);
                     }
-                </select>
-                <div class="quick-add-actions">
-                    <button class="btn-quick btn-quick-save" onclick="saveQuickTask(this, 'NotStarted')">
-                        <i class="bi bi-check"></i> ذخیره
-                    </button>
-                    <button class="btn-quick btn-quick-cancel" onclick="hideQuickAdd(this)">
-                        <i class="bi bi-x"></i> انصراف
-                    </button>
                 </div>
             </div>
-            @foreach (var task in notStartedTasks)
-            {
-                await Html.RenderPartialAsync("_TaskCard", task);
-            }
-        </div>
+        }
     </div>
-
-    <!-- در حال انجام -->
-    <div class="kanban-column" data-status="InProgress">
-        <div class="column-header">
-            <h3 class="column-title">
-                <i class="bi bi-arrow-repeat column-icon column-icon-in-progress"></i>
-                در حال انجام
-            </h3>
-            <span class="column-count">@inProgressTasks.Count</span>
-        </div>
-        <div class="column-body">
-            <button class="add-task-trigger" onclick="showQuickAdd(this, 'InProgress')">
-                <i class="bi bi-plus"></i>
-                افزودن تسک سریع
-            </button>
-            <div class="quick-add-form">
-                <input type="text" class="quick-add-input" placeholder="عنوان تسک..." maxlength="100">
-                <select class="quick-add-project" style="margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
-                    @if (ViewBag.UserProjects != null)
-                    {
-                        @foreach (var project in ViewBag.UserProjects)
-                        {
-                            var isSelected = ViewBag.DefaultProjectId != null && ViewBag.DefaultProjectId.Equals(project.Id);
-                            @if (isSelected)
-                            {
-                                <option value="@project.Id" selected>@project.Name</option>
-                            }
-                            else
-                            {
-                                <option value="@project.Id">@project.Name</option>
-                            }
-                        }
-                    }
-                </select>
-                <div class="quick-add-actions">
-                    <button class="btn-quick btn-quick-save" onclick="saveQuickTask(this, 'InProgress')">
-                        <i class="bi bi-check"></i> ذخیره
-                    </button>
-                    <button class="btn-quick btn-quick-cancel" onclick="hideQuickAdd(this)">
-                        <i class="bi bi-x"></i> انصراف
-                    </button>
-                </div>
-            </div>
-            @foreach (var task in inProgressTasks)
-            {
-                await Html.RenderPartialAsync("_TaskCard", task);
-            }
-        </div>
-    </div>
-
-    <!-- تکمیل شده -->
-    <div class="kanban-column" data-status="Completed">
-        <div class="column-header">
-            <h3 class="column-title">
-                <i class="bi bi-check-circle column-icon column-icon-completed"></i>
-                تکمیل شده
-            </h3>
-            <span class="column-count">@completedTasks.Count</span>
-        </div>
-        <div class="column-body">
-            <button class="add-task-trigger" onclick="showQuickAdd(this, 'Completed')">
-                <i class="bi bi-plus"></i>
-                افزودن تسک سریع
-            </button>
-            <div class="quick-add-form">
-                <input type="text" class="quick-add-input" placeholder="عنوان تسک..." maxlength="100">
-                <select class="quick-add-project" style="margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
-                    @if (ViewBag.UserProjects != null)
-                    {
-                        @foreach (var project in ViewBag.UserProjects)
-                        {
-                            var isSelected = ViewBag.DefaultProjectId != null && ViewBag.DefaultProjectId.Equals(project.Id);
-                            @if (isSelected)
-                            {
-                                <option value="@project.Id" selected>@project.Name</option>
-                            }
-                            else
-                            {
-                                <option value="@project.Id">@project.Name</option>
-                            }
-                        }
-                    }
-                </select>
-                <div class="quick-add-actions">
-                    <button class="btn-quick btn-quick-save" onclick="saveQuickTask(this, 'Completed')">
-                        <i class="bi bi-check"></i> ذخیره
-                    </button>
-                    <button class="btn-quick btn-quick-cancel" onclick="hideQuickAdd(this)">
-                        <i class="bi bi-x"></i> انصراف
-                    </button>
-                </div>
-            </div>
-            @foreach (var task in completedTasks)
-            {
-                await Html.RenderPartialAsync("_TaskCard", task);
-            }
-        </div>
-    </div>
-</div>
-
-@await Html.PartialAsync("_SendToJuleModal")
 </div>
 
 <!-- Create Task Modal -->
@@ -632,7 +533,7 @@
         });
 
         // --- Quick Add functionality ---
-        function showQuickAdd(trigger, status) {
+        function showQuickAdd(trigger, columnId) {
             // Hide trigger button
             trigger.style.display = 'none';
             
@@ -648,7 +549,7 @@
             input.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    saveQuickTask(form.querySelector('.btn-quick-save'), status);
+                    saveQuickTask(form.querySelector('.btn-quick-save'), columnId);
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     hideQuickAdd(form.querySelector('.btn-quick-cancel'));
@@ -670,7 +571,7 @@
             trigger.style.display = 'flex';
         }
 
-        async function saveQuickTask(saveBtn, status) {
+        async function saveQuickTask(saveBtn, columnId) {
             const form = saveBtn.closest('.quick-add-form');
             const input = form.querySelector('.quick-add-input');
             const projectSelect = form.querySelector('.quick-add-project');
@@ -682,24 +583,21 @@
                 return;
             }
 
-            // Since we auto-select a default project, this should rarely happen
             if (!projectId) {
                 alert('پروژه‌ای انتخاب نشده است. لطفا یک پروژه انتخاب کنید.');
                 projectSelect.focus();
                 return;
             }
             
-            // Disable form during save
             saveBtn.disabled = true;
             const originalText = saveBtn.innerHTML;
             saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> در حال ذخیره...';
             
             try {
-                // Get anti-forgery token
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                 const formData = new FormData();
                 formData.append('title', title);
-                formData.append('status', status);
+                formData.append('boardColumnId', columnId);
                 formData.append('projectId', projectId);
                 if (token) formData.append('__RequestVerificationToken', token);
                 
@@ -793,43 +691,6 @@
         function setupTaskForm(formSelector, modalSelector) {
             const form = document.querySelector(formSelector);
             if (!form) return;
-
-            const sendToJuleBtn = document.getElementById('send-to-jule-btn');
-            if (sendToJuleBtn) {
-                sendToJuleBtn.addEventListener('click', function () {
-                    var myModal = new bootstrap.Modal(document.getElementById('send-to-jule-modal'), {});
-                    var sourceDropdown = document.getElementById('jule-source');
-
-                    // Fetch sources
-                    fetch('/Tasks/GetJuleSources')
-                        .then(response => response.json())
-                        .then(data => {
-                            sourceDropdown.innerHTML = '';
-                            data.forEach(source => {
-                                var option = document.createElement('option');
-                                option.value = source.name;
-                                option.textContent = source.id;
-                                sourceDropdown.appendChild(option);
-                            });
-                        });
-
-                    // Pre-fill prompt
-                    var title = document.getElementById('Title').value;
-                    var description = document.getElementById('Description').value;
-                    var attachments = '';
-                    var attachmentElements = document.querySelectorAll('.attachment-item');
-                    if (attachmentElements.length > 0) {
-                        attachments = '\n\nAttachments:\n';
-                        attachmentElements.forEach(function (element) {
-                            attachments += `- ${element.textContent.trim()}\n`;
-                        });
-                    }
-                    document.getElementById('jule-prompt').value = `Title: ${title}\n\nDescription: ${description}${attachments}`;
-
-                    myModal.show();
-                });
-            }
-
             form.addEventListener('submit', async e => {
                 e.preventDefault();
                 const formData = new FormData(form);
@@ -892,9 +753,9 @@
     // ---- Drag & Drop Kanban ----
         const kanbanColumns = document.querySelectorAll('.kanban-column');
         let dragItem = null;
-        let dragOriginStatus = null;
-        let isUpdatingStatus = false; // Prevent multiple simultaneous requests
-        let pendingRequests = new Set(); // Track pending requests
+        let dragOriginColumnId = null;
+        let isUpdatingStatus = false;
+        let pendingRequests = new Set();
 
         function refreshCounters() {
             kanbanColumns.forEach(col => {
@@ -906,14 +767,13 @@
         }
 
         function initDragAndDrop() {
-            // Remove existing event listeners to prevent duplicates
             document.querySelectorAll('.task-card').forEach(card => {
                 if (card.dataset.dragInitialized === 'true') return;
                 card.dataset.dragInitialized = 'true';
                 
                 card.addEventListener('dragstart', e => {
                     dragItem = card;
-                    dragOriginStatus = card.closest('.kanban-column')?.dataset.status;
+                    dragOriginColumnId = card.closest('.kanban-column')?.dataset.columnId;
                     card.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', card.getAttribute('data-task-id'));
@@ -922,16 +782,13 @@
                 card.addEventListener('dragend', () => {
                     card.classList.remove('dragging');
                     dragItem = null;
-                    dragOriginStatus = null;
+                    dragOriginColumnId = null;
                 });
                 
-                // Add double-click event to open edit modal
                 card.addEventListener('dblclick', e => {
                     e.preventDefault();
                     const taskId = card.getAttribute('data-task-id');
-                    if (taskId) {
-                        editTask(taskId);
-                    }
+                    if (taskId) editTask(taskId);
                 });
             });
 
@@ -955,24 +812,19 @@
                     body.classList.remove('drag-over');
                     if (!dragItem) return;
                     
-                    const targetStatus = column.dataset.status;
-                    if (dragOriginStatus === targetStatus) return;
+                    const targetColumnId = column.dataset.columnId;
+                    if (dragOriginColumnId === targetColumnId) return;
                     
                     const taskId = dragItem.getAttribute('data-task-id');
                     
-                    // Check if this request is already pending
-                    const requestKey = `${taskId}-${targetStatus}`;
-                    if (pendingRequests.has(requestKey) || isUpdatingStatus) {
-                        return;
-                    }
+                    const requestKey = `${taskId}-${targetColumnId}`;
+                    if (pendingRequests.has(requestKey)) return;
                     
                     body.appendChild(dragItem);
                     refreshCounters();
-                    updateTaskStatus(taskId, targetStatus, () => {
-                        // success toast already shown
-                    }, () => {
-                        // revert on failure
-                        const originCol = document.querySelector(`.kanban-column[data-status="${dragOriginStatus}"] .column-body`);
+                    updateTaskColumn(taskId, targetColumnId, null, () => {
+                        // On failure, revert
+                        const originCol = document.querySelector(`.kanban-column[data-column-id="${dragOriginColumnId}"] .column-body`);
                         if (originCol) originCol.appendChild(dragItem);
                         refreshCounters();
                     });
@@ -980,33 +832,26 @@
             });
         }
 
-        async function updateTaskStatus(id, newStatus, onOk, onFail) {
-            const requestKey = `${id}-${newStatus}`;
+        async function updateTaskColumn(id, newColumnId, onOk, onFail) {
+            const requestKey = `${id}-${newColumnId}`;
+            if (pendingRequests.has(requestKey)) return;
             
-            // Prevent duplicate requests
-            if (pendingRequests.has(requestKey) || isUpdatingStatus) {
-                console.log('Request already pending, skipping:', requestKey);
-                return;
-            }
-            
-            isUpdatingStatus = true;
             pendingRequests.add(requestKey);
             
             try {
-                // anti-forgery: attempt to read from any existing form token
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                 const formData = new FormData();
                 formData.append('id', id);
-                formData.append('newStatus', newStatus);
+                formData.append('newColumnId', newColumnId);
                 if (token) formData.append('__RequestVerificationToken', token);
                 
-                const resp = await fetch('@Url.Action("ChangeStatus")', {
+                const resp = await fetch('@Url.Action("ChangeColumn")', {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     body: formData
                 });
                 
-                if (!resp.ok) throw new Error();
+                if (!resp.ok) throw new Error('Server error');
                 const ct = resp.headers.get('content-type')||'';
                 if (ct.includes('application/json')) {
                     const json = await resp.json();
@@ -1122,28 +967,6 @@
                 }
             });
         }
-
-        function fetchJuleStatuses() {
-            const taskCards = document.querySelectorAll('.task-card[data-jule-session-id]');
-            taskCards.forEach(card => {
-                const sessionId = card.dataset.juleSessionId;
-                if (sessionId) {
-                    const statusSpan = card.querySelector('.jule-status');
-                    fetch(`/Tasks/GetJuleSessionStatus?sessionId=${sessionId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            statusSpan.textContent = `Jule: ${data.state}`;
-                        })
-                        .catch(() => {
-                            statusSpan.textContent = 'Jule: Error';
-                        });
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            fetchJuleStatuses();
-        });
     </script>
 }
 

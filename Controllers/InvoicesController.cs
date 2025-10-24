@@ -81,7 +81,7 @@ namespace TaskManagementMvc.Controllers
                 .Include(t => t.Performer)
                 .ThenInclude(p => p.Grade)
                 .Include(t => t.Project)
-                .Where(t => t.Status == TaskStatus.Completed && t.Hours > 0);
+                .Where(t => t.Status == TaskStatus.Completed && t.CompletedEstimateHours > 0);
 
             if (!User.IsInRole(Roles.SystemAdmin))
             {
@@ -116,9 +116,9 @@ namespace TaskManagementMvc.Controllers
                 TaskId = t.Id,
                 Title = t.Title,
                 Description = t.Description,
-                HoursAvailable = t.Hours,
+                HoursAvailable = t.CompletedEstimateHours,
                 Selected = ViewBag.SelectedTaskIds != null && ((List<int>)ViewBag.SelectedTaskIds).Contains(t.Id),
-                HoursForInvoice = t.Hours,
+                HoursForInvoice = t.CompletedEstimateHours,
                 PerformerName = t.Performer?.Name,
                 StartAt = t.StartAt
             }).ToList();
@@ -212,9 +212,9 @@ namespace TaskManagementMvc.Controllers
                     TaskId = t.Id,
                     Title = t.Title,
                     Description = t.Description,
-                    HoursAvailable = t.Hours,
+                    HoursAvailable = t.CompletedEstimateHours,
                     Selected = selectedTasks.Any(st => st.TaskId == t.Id),
-                    HoursForInvoice = selectedTasks.FirstOrDefault(st => st.TaskId == t.Id)?.HoursForInvoice ?? t.Hours,
+                    HoursForInvoice = selectedTasks.FirstOrDefault(st => st.TaskId == t.Id)?.HoursForInvoice ?? t.CompletedEstimateHours,
                     PerformerName = t.Performer?.Name,
                     StartAt = t.StartAt
                 }).ToList();
@@ -238,7 +238,7 @@ namespace TaskManagementMvc.Controllers
             foreach (var task in taskEntities)
             {
                 var overrideVm = selectedTasks.First(st => st.TaskId == task.Id);
-                double hoursForInvoice = Math.Min(overrideVm.HoursForInvoice, task.Hours); // cap at available
+                double hoursForInvoice = Math.Min(overrideVm.HoursForInvoice, task.CompletedEstimateHours); // cap at available
                 if (hoursForInvoice < 0) hoursForInvoice = 0;
                 var line = new InvoiceLine
                 {
@@ -332,7 +332,7 @@ namespace TaskManagementMvc.Controllers
                     .ThenInclude(p => p.Grade)
                     .Include(t => t.Project)
                     .ThenInclude(p => p.Company)
-                    .Where(t => t.Status == TaskStatus.Completed && t.Hours > 0);
+                    .Where(t => t.Status == TaskStatus.Completed && t.CompletedEstimateHours > 0);
             }
             else if (user?.CompanyId != null)
             {
@@ -342,7 +342,7 @@ namespace TaskManagementMvc.Controllers
                     .ThenInclude(p => p.Grade)
                     .Include(t => t.Project)
                     .ThenInclude(p => p.Company)
-                    .Where(t => t.Status == TaskStatus.Completed && t.Hours > 0 && t.Project.CompanyId == user.CompanyId);
+                    .Where(t => t.Status == TaskStatus.Completed && t.CompletedEstimateHours > 0 && t.Project.CompanyId == user.CompanyId);
             }
             else
             {
@@ -467,7 +467,7 @@ namespace TaskManagementMvc.Controllers
             sb.AppendLine("\n<b>جزئیات:</b>");
             foreach (var l in invoice.Lines)
             {
-                sb.AppendLine($"• {l.Title} — {l.Hours} ساعت × {l.HourlyRate:C} = {l.Amount:C}");
+                sb.AppendLine($"• {l.Title} — {l.CompletedEstimateHours} ساعت × {l.HourlyRate:C} = {l.Amount:C}");
             }
             return sb.ToString();
         }
@@ -475,7 +475,7 @@ namespace TaskManagementMvc.Controllers
         private string GenerateDefaultInvoiceEmail(Invoice invoice)
         {
             var taskList = string.Join("<br/>", invoice.Lines.Select(l =>
-                $"- {l.Title}: {l.Hours} ساعت × {l.HourlyRate:C} = {l.Amount:C}"));
+                $"- {l.Title}: {l.CompletedEstimateHours} ساعت × {l.HourlyRate:C} = {l.Amount:C}"));
 
             return $@"
                 <div dir='rtl' style='font-family: Tahoma, Arial, sans-serif;'>
@@ -493,7 +493,7 @@ namespace TaskManagementMvc.Controllers
         private string ReplaceTemplateVariables(string template, Invoice invoice)
         {
             var taskList = string.Join("<br/>", invoice.Lines.Select(l =>
-                $"- {l.Title}: {l.Hours} ساعت × {l.HourlyRate:C} = {l.Amount:C}"));
+                $"- {l.Title}: {l.CompletedEstimateHours} ساعت × {l.HourlyRate:C} = {l.Amount:C}"));
 
             var performerTotals = BuildPerformerTotals(invoice);
 
@@ -521,7 +521,7 @@ namespace TaskManagementMvc.Controllers
                 .Select(g => new
                 {
                     Name = g.Key,
-                    Hours = g.Sum(x => x.Line.Hours),
+                    Hours = g.Sum(x => x.Line.CompletedEstimateHours),
                     Amount = g.Sum(x => x.Line.Amount),
                     Iban = g.Select(x => x.Performer?.IbanNumber).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty,
                     Card = g.Select(x => x.Performer?.CardNumber).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty
@@ -604,7 +604,7 @@ namespace TaskManagementMvc.Controllers
                 .Include(t => t.Performer)
                 .ThenInclude(p => p.Grade)
                 .Include(t => t.Project)
-                .Where(t => t.Status == TaskStatus.Completed && t.Hours > 0);
+                .Where(t => t.Status == TaskStatus.Completed && t.CompletedEstimateHours > 0);
 
             if (!User.IsInRole(Roles.SystemAdmin))
             {

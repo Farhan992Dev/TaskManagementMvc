@@ -495,9 +495,6 @@ namespace TaskManagementMvc.Migrations
                     b.Property<int?>("UpdatedById")
                         .HasColumnType("int");
 
-                    b.Property<string>("JuleSessionId")
-                        .HasColumnType("longtext");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
@@ -1112,13 +1109,11 @@ namespace TaskManagementMvc.Migrations
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("BoardColumnId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("StartAt")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1144,6 +1139,8 @@ namespace TaskManagementMvc.Migrations
                     b.HasIndex("ProjectId");
 
                     b.HasIndex("UpdatedById");
+
+                    b.HasIndex("BoardColumnId");
 
                     b.ToTable("Tasks");
                 });
@@ -1509,6 +1506,11 @@ namespace TaskManagementMvc.Migrations
 
             modelBuilder.Entity("TaskManagementMvc.Models.TaskItem", b =>
                 {
+                    b.HasOne("TaskManagementMvc.Models.BoardColumn", "BoardColumn")
+                        .WithMany()
+                        .HasForeignKey("BoardColumnId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TaskManagementMvc.Models.Company", null)
                         .WithMany("Tasks")
                         .HasForeignKey("CompanyId");
@@ -1544,6 +1546,8 @@ namespace TaskManagementMvc.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("UpdatedBy");
+
+                    b.Navigation("BoardColumn");
                 });
 
             modelBuilder.Entity("TaskManagementMvc.Models.UserRole", b =>
@@ -1646,6 +1650,17 @@ namespace TaskManagementMvc.Migrations
                     b.Navigation("Tasks");
                 });
 
+            modelBuilder.Entity("TaskManagementMvc.Models.BoardColumn", b =>
+                {
+                    b.HasOne("TaskManagementMvc.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("TaskManagementMvc.Models.TaskItem", b =>
                 {
                     b.Navigation("Attachments");
@@ -1653,7 +1668,7 @@ namespace TaskManagementMvc.Migrations
                     b.Navigation("HistoryEntries");
                 });
 
-            modelBuilder.Entity("TaskManagementMvc.Models.Setting", b =>
+            modelBuilder.Entity("TaskManagementMvc.Models.BoardColumn", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1661,19 +1676,25 @@ namespace TaskManagementMvc.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Key")
+                    b.Property<bool>("IsCompletedColumn")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Settings");
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("BoardColumns");
                 });
 #pragma warning restore 612, 618
         }

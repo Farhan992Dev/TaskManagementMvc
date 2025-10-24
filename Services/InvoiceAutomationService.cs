@@ -110,7 +110,7 @@ namespace TaskManagementMvc.Services
             var tasks = await context.Tasks
                 .Include(t => t.Performer).ThenInclude(p => p.Grade)
                 .Include(t => t.Project)
-                .Where(t => t.Status == TaskStatus.Completed && t.Hours > 0 && t.Project.CompanyId == schedule.CompanyId)
+                .Where(t => t.Status == TaskStatus.Completed && t.CompletedEstimateHours > 0 && t.Project.CompanyId == schedule.CompanyId)
                 .ToListAsync(ct);
 
             if (!tasks.Any())
@@ -143,8 +143,8 @@ namespace TaskManagementMvc.Services
                     PerformerName = task.Performer?.Name,
                     GradeName = task.Performer?.Grade?.Name,
                     HourlyRate = task.Performer?.Grade?.HourlyRate ?? 0,
-                    Hours = task.Hours,
-                    Amount = (task.Performer?.Grade?.HourlyRate ?? 0) * (decimal)task.Hours
+                    Hours = task.CompletedEstimateHours,
+                    Amount = (task.Performer?.Grade?.HourlyRate ?? 0) * (decimal)task.CompletedEstimateHours
                 };
                 context.InvoiceLines.Add(line);
                 task.Status = TaskStatus.Invoiced;

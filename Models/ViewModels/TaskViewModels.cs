@@ -14,7 +14,7 @@ namespace TaskManagementMvc.Models.ViewModels
         public TaskManagementMvc.Models.TaskStatus Status { get; set; } = TaskManagementMvc.Models.TaskStatus.InProgress;
         public TaskManagementMvc.Models.TaskPriority Priority { get; set; } = TaskManagementMvc.Models.TaskPriority.Medium;
 
-        public double Hours { get; set; }
+        public double CompletedEstimateHours { get; set; }
         public double? OriginalEstimateHours { get; set; }
 
         public DateTime? StartAt { get; set; }

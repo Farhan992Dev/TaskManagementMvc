@@ -235,7 +235,7 @@
     };
 }
 
-<div class="task-card" draggable="true" data-task-id="@Model.Id" data-assignee-id="@Model.PerformerId" data-jule-session-id="@Model.JuleSessionId" title="دبل کلیک برای ویرایش">
+<div class="task-card" draggable="true" data-task-id="@Model.Id" data-assignee-id="@Model.PerformerId" title="دبل کلیک برای ویرایش">
     <div class="task-priority-stripe @priorityClass"></div>
     
     <div class="task-header">
@@ -298,15 +298,6 @@
         </div>
         <div class="task-sp">@(Model.OriginalEstimateHours?.ToString("0") ?? "0") SP</div>
     </div>
-    @if (!string.IsNullOrEmpty(Model.JuleSessionId))
-    {
-        <div class="task-footer" style="background-color: #e6f7ff;">
-            <div class="stat-item jule-status-container">
-                <i class="bi bi-robot"></i>
-                <span class="jule-status">Loading Jule status...</span>
-            </div>
-        </div>
-    }
 </div>
 
 <script>

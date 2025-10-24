@@ -113,7 +113,7 @@ else
                                     }
                                 </td>
                                 <td>
-                                    <span class="badge bg-success">@task.Hours ساعت</span>
+                                    <span class="badge bg-success">@task.CompletedEstimateHours ساعت</span>
                                 </td>
                                 <td>
                                     @if (task.Project != null)
@@ -173,7 +173,7 @@ else
             <div class="card bg-light">
                 <div class="card-body text-center">
                     <h5 class="card-title text-primary">جمع کل ساعات</h5>
-                    <h3 class="text-success">@Model.Sum(t => t.Hours) ساعت</h3>
+                    <h3 class="text-success">@Model.Sum(t => t.CompletedEstimateHours) ساعت</h3>
                 </div>
             </div>
         </div>
@@ -189,7 +189,7 @@ else
             <div class="card bg-light">
                 <div class="card-body text-center">
                     <h5 class="card-title text-primary">میانگین ساعت</h5>
-                    <h3 class="text-warning">@(Model.Any() ? Math.Round(Model.Average(t => t.Hours), 1) : 0) ساعت</h3>
+                    <h3 class="text-warning">@(Model.Any() ? Math.Round(Model.Average(t => t.CompletedEstimateHours), 1) : 0) ساعت</h3>
                 </div>
             </div>
         </div>

@@ -52,9 +52,9 @@ namespace TaskManagementMvc.Models.ViewModels
         public int TaskId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public double HoursAvailable { get; set; }
+        public double CompletedEstimateHoursAvailable { get; set; }
         public bool Selected { get; set; }
-        public double HoursForInvoice { get; set; }
+        public double CompletedEstimateHoursForInvoice { get; set; }
         public string? PerformerName { get; set; }
         public DateTime? StartAt { get; set; }
     }

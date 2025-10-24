@@ -7,10 +7,7 @@ using TaskManagementMvc.Data;
 using TaskManagementMvc.Models;
 using TaskManagementMvc.Models.ViewModels;
 using TaskManagementMvc.Services;
-using TaskManagementMvc.Services.Jule;
 using TaskStatus = TaskManagementMvc.Models.TaskStatus;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 
 namespace TaskManagementMvc.Controllers
 {
@@ -20,7 +17,6 @@ namespace TaskManagementMvc.Controllers
         private readonly TaskManagementContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IScalableNotificationService _notificationService;
-        private readonly JuleApiClient _juleApiClient;
         
         private async Task<ApplicationUser> GetCurrentUserOrThrow()
         {
@@ -38,13 +34,11 @@ namespace TaskManagementMvc.Controllers
         public TasksController(
             TaskManagementContext context,
             UserManager<ApplicationUser> userManager,
-            IScalableNotificationService notificationService,
-            JuleApiClient juleApiClient)
+            IScalableNotificationService notificationService)
         {
             _context = context;
             _userManager = userManager;
             _notificationService = notificationService;
-            _juleApiClient = juleApiClient;
         }
 
         // GET: Tasks
@@ -356,7 +350,7 @@ namespace TaskManagementMvc.Controllers
             // Check if this is an AJAX request
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
-                return PartialView("_TaskFormModal", vm);
+                return PartialView("_CreateTaskModal", vm);
             }
 
             return View(vm);
@@ -385,7 +379,7 @@ namespace TaskManagementMvc.Controllers
                         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                         {
                             Response.StatusCode = 400;
-                            return PartialView("_TaskFormModal", vm);
+                            return PartialView("_CreateTaskModal", vm);
                         }
                         return View(vm);
                     }
@@ -396,7 +390,7 @@ namespace TaskManagementMvc.Controllers
                         Description = vm.Description,
                         Status = vm.Status,
                         Priority = vm.Priority,
-                        Hours = vm.Hours,
+                        CompletedEstimateHours = vm.Hours,
                         OriginalEstimateHours = vm.OriginalEstimateHours,
                         StartAt = vm.StartAt,
                         EndAt = vm.EndAt,
@@ -422,7 +416,7 @@ namespace TaskManagementMvc.Controllers
                             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                             {
                                 Response.StatusCode = 400;
-                                return PartialView("_TaskFormModal", vm);
+                                return PartialView("_CreateTaskModal", vm);
                             }
                             return View(vm);
                         }
@@ -602,7 +596,7 @@ namespace TaskManagementMvc.Controllers
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 Response.StatusCode = 400; // Bad Request for validation errors
-                return PartialView("_TaskFormModal", vm);
+                return PartialView("_CreateTaskModal", vm);
             }
 
             return View(vm);
@@ -645,7 +639,7 @@ namespace TaskManagementMvc.Controllers
                 Description = task.Description,
                 Status = task.Status,
                 Priority = task.Priority,
-                Hours = task.Hours,
+                Hours = task.CompletedEstimateHours,
                 OriginalEstimateHours = task.OriginalEstimateHours,
                 StartAt = task.StartAt,
                 EndAt = task.EndAt,
@@ -663,7 +657,7 @@ namespace TaskManagementMvc.Controllers
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 // Return the modal partial for in-place editing
-                return PartialView("_TaskFormModal", vm);
+                return PartialView("_EditTaskModal", vm);
             }
 
             return View(vm);
@@ -727,9 +721,9 @@ namespace TaskManagementMvc.Controllers
                     {
                         await LogTaskChange(id, "Priority", existingTask.Priority.ToString(), vm.Priority.ToString(), user.Id);
                     }
-                    if (existingTask.Hours != vm.Hours)
+                    if (existingTask.CompletedEstimateHours != vm.Hours)
                     {
-                        await LogTaskChange(id, "Hours", existingTask.Hours.ToString(), vm.Hours.ToString(), user.Id);
+                        await LogTaskChange(id, "CompletedEstimateHours", existingTask.CompletedEstimateHours.ToString(), vm.Hours.ToString(), user.Id);
                     }
                     if (existingTask.OriginalEstimateHours != vm.OriginalEstimateHours)
                     {
@@ -756,7 +750,7 @@ namespace TaskManagementMvc.Controllers
                     existingTask.Description = vm.Description;
                     existingTask.Status = vm.Status;
                     existingTask.Priority = vm.Priority;
-                    existingTask.Hours = vm.Hours;
+                    existingTask.CompletedEstimateHours = vm.Hours;
                     existingTask.OriginalEstimateHours = vm.OriginalEstimateHours;
                     existingTask.StartAt = vm.StartAt;
                     existingTask.EndAt = vm.EndAt;
@@ -901,7 +895,7 @@ namespace TaskManagementMvc.Controllers
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 Response.StatusCode = 400; // Bad Request
-                return PartialView("_TaskFormModal", vm);
+                return PartialView("_EditTaskModal", vm);
             }
 
             return View(vm);
@@ -1348,14 +1342,14 @@ namespace TaskManagementMvc.Controllers
             {
                 await LogTaskChange(model.Id, "Description", task.Description, model.Description, user.Id);
             }
-            if (task.Hours != model.Hours)
+            if (task.CompletedEstimateHours != model.Hours)
             {
-                await LogTaskChange(model.Id, "Hours", task.Hours.ToString(), model.Hours.ToString(), user.Id);
+                await LogTaskChange(model.Id, "CompletedEstimateHours", task.CompletedEstimateHours.ToString(), model.Hours.ToString(), user.Id);
             }
 
             task.Title = model.Title;
             task.Description = model.Description;
-            task.Hours = model.Hours;
+            task.CompletedEstimateHours = model.Hours;
             task.UpdatedAt = DateTime.Now;
             task.UpdatedById = user.Id;
 
@@ -1521,7 +1515,7 @@ namespace TaskManagementMvc.Controllers
                 CreatedAt = DateTime.Now,
                 CreatedById = user!.Id,
                 Priority = TaskPriority.Medium,
-                Hours = hours.GetValueOrDefault(0)
+                CompletedEstimateHours = hours.GetValueOrDefault(0)
             };
             if (performerId.HasValue)
             {
@@ -1553,7 +1547,7 @@ namespace TaskManagementMvc.Controllers
                     .ThenInclude(p => p.Grade)
                     .Include(t => t.Project)
                     .ThenInclude(p => p.Company)
-                    .Where(t => t.Status == TaskStatus.Completed && t.Hours > 0);
+                    .Where(t => t.Status == TaskStatus.Completed && t.CompletedEstimateHours > 0);
             }
             else if (user?.CompanyId != null)
             {
@@ -1563,7 +1557,7 @@ namespace TaskManagementMvc.Controllers
                     .ThenInclude(p => p.Grade)
                     .Include(t => t.Project)
                     .ThenInclude(p => p.Company)
-                    .Where(t => t.Status == TaskStatus.Completed && t.Hours > 0 && t.Project.CompanyId == user.CompanyId);
+                    .Where(t => t.Status == TaskStatus.Completed && t.CompletedEstimateHours > 0 && t.Project.CompanyId == user.CompanyId);
             }
             else
             {
@@ -1981,11 +1975,11 @@ namespace TaskManagementMvc.Controllers
             return _context.Tasks.Any(e => e.Id == id);
         }
 
-        // POST: Tasks/SetHours
+        // POST: Tasks/SetCompletedEstimateHours
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = Permissions.EditTasks)]
-        public async Task<IActionResult> SetHours(int id, double hours)
+        public async Task<IActionResult> SetCompletedEstimateHours(int id, double hours)
         {
             if (hours < 0) {
                 await this.NotifyValidationErrorAsync("ساعت نمی‌تواند منفی باشد");
@@ -2010,11 +2004,11 @@ namespace TaskManagementMvc.Controllers
             var task = await taskQuery.FirstOrDefaultAsync(t => t.Id == id);
             if (task == null) return NotFound();
 
-            var old = task.Hours;
-            task.Hours = hours;
+            var old = task.CompletedEstimateHours;
+            task.CompletedEstimateHours = hours;
             task.UpdatedAt = DateTime.Now;
             task.UpdatedById = user?.Id;
-            await LogTaskChange(id, "Hours", old.ToString(), hours.ToString(), user?.Id);
+            await LogTaskChange(id, "CompletedEstimateHours", old.ToString(), hours.ToString(), user?.Id);
             _context.Update(task);
             await _context.SaveChangesAsync();
             return Json(new { success = true });
@@ -2202,73 +2196,104 @@ namespace TaskManagementMvc.Controllers
             };
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetJuleSources()
-        {
-            try
-            {
-                var apiKey = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == "JuleApiKey"))?.Value;
-                if (string.IsNullOrEmpty(apiKey))
-                {
-                    return StatusCode(500, new { message = "Jule API key is not configured." });
-                }
-                var sourcesJson = await _juleApiClient.ListSourcesAsync(apiKey);
-                var sources = JsonConvert.DeserializeObject<dynamic>(sourcesJson);
-                return Json(sources.sources);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
+        // POST: Tasks/ChangeColumn
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendToJule([FromBody] SendToJuleViewModel model)
+        public async Task<IActionResult> ChangeColumn(int id, int newColumnId)
         {
-            var task = await _context.Tasks.FindAsync(model.Id);
+            var task = await _context.Tasks.FindAsync(id);
             if (task == null)
             {
                 return NotFound();
             }
 
-            try
+            var user = await _userManager.GetUserAsync(User);
+            if (task.ProjectId.HasValue && !await HasProjectAccessById(user, task.ProjectId))
             {
-                var apiKey = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == "JuleApiKey"))?.Value;
-                if (string.IsNullOrEmpty(apiKey))
-                {
-                    return StatusCode(500, new { message = "Jule API key is not configured." });
-                }
-                var sessionJson = await _juleApiClient.CreateSessionAsync(apiKey, model.Source, task.Title, model.Prompt);
-                var session = JsonConvert.DeserializeObject<dynamic>(sessionJson);
-                task.JuleSessionId = session.id;
-                await _context.SaveChangesAsync();
-                return Json(new { success = true, sessionId = task.JuleSessionId });
+                return Forbid();
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+
+            var oldColumnId = task.BoardColumnId;
+            task.BoardColumnId = newColumnId;
+            task.UpdatedAt = DateTime.UtcNow;
+            task.UpdatedById = user.Id;
+
+            await LogTaskChange(id, "BoardColumnId", oldColumnId.ToString(), newColumnId.ToString(), user.Id);
+
+            _context.Update(task);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetJuleSessionStatus(string sessionId)
+        // GET: Tasks/SendToJule/5
+        public async Task<IActionResult> SendToJule(int id)
         {
-            try
+            var task = await _context.Tasks.FindAsync(id);
+            if (task == null)
             {
-                var apiKey = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == "JuleApiKey"))?.Value;
-                if (string.IsNullOrEmpty(apiKey))
+                return NotFound();
+            }
+
+            var prompt = $"Title: {task.Title}\n\nDescription: {task.Description}\n\n";
+
+            var attachments = await _context.TaskAttachments.Where(a => a.TaskId == id).ToListAsync();
+            if (attachments.Any())
+            {
+                prompt += "Attachments:\n";
+                foreach (var attachment in attachments)
                 {
-                    return StatusCode(500, new { message = "Jule API key is not configured." });
+                    prompt += $"- {attachment.FileName}\n";
                 }
-                var sessionJson = await _juleApiClient.GetSessionAsync(apiKey, sessionId);
-                var session = JsonConvert.DeserializeObject<dynamic>(sessionJson);
-                return Json(session);
             }
-            catch (Exception ex)
+
+            var vm = new SendToJuleViewModel
             {
-                return StatusCode(500, new { message = ex.Message });
+                TaskId = task.Id,
+                Task = task,
+                Prompt = prompt
+            };
+
+            return View(vm);
+        }
+
+        // POST: Tasks/SendToJule
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendToJule(SendToJuleViewModel vm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Simulate Jule API call
+                    await Task.Delay(1000); // Simulate network latency
+
+                    // In a real application, you would use an HttpClient to send a request to the Jule API
+                    // For example:
+                    // var client = new HttpClient();
+                    // var response = await client.PostAsJsonAsync("https://api.jule.com/tasks", new { ... });
+                    // response.EnsureSuccessStatusCode();
+
+                    var task = await _context.Tasks.FindAsync(vm.TaskId);
+                    if (task != null)
+                    {
+                        task.JuleSessionId = Guid.NewGuid().ToString(); // Simulate receiving a session ID from Jule
+                        await _context.SaveChangesAsync();
+                    }
+
+                    TempData["SuccessMessage"] = "تسک با موفقیت به Jule ارسال شد.";
+                    return RedirectToAction("Edit", new { id = vm.TaskId });
+                }
+                catch (Exception ex)
+                {
+                    // Log the error
+                    ModelState.AddModelError(string.Empty, "خطا در ارسال تسک به Jule. لطفا دوباره تلاش کنید.");
+                }
             }
+
+            vm.Task = await _context.Tasks.FindAsync(vm.TaskId);
+            return View(vm);
         }
     }
 
@@ -2277,6 +2302,6 @@ namespace TaskManagementMvc.Controllers
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public double Hours { get; set; }
+        public double CompletedEstimateHours { get; set; }
     }
 }

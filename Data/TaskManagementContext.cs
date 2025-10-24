@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaskManagementMvc.Models;
-using TaskStatus = TaskManagementMvc.Models.TaskStatus;
 
 namespace TaskManagementMvc.Data
 {
@@ -30,7 +29,7 @@ namespace TaskManagementMvc.Data
         public DbSet<ProjectAccess> ProjectAccess { get; set; }
     public DbSet<InvoiceSchedule> InvoiceSchedules { get; set; }
     public DbSet<InvoiceJobRunLog> InvoiceJobRunLogs { get; set; }
-    public DbSet<Setting> Settings { get; set; }
+    public DbSet<BoardColumn> BoardColumns { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -116,11 +115,16 @@ namespace TaskManagementMvc.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Description).HasMaxLength(1000);
-                entity.Property(e => e.Status).HasDefaultValue(TaskStatus.InProgress);
                 entity.Property(e => e.Priority).HasDefaultValue(TaskPriority.Medium);
-                entity.Property(e => e.Hours).HasDefaultValue(0);
-                entity.Property(e => e.IsArchived).HasDefaultValue(false);
+                entity.Property(e => e.CompletedEstimateHours).HasDefaultValue(0);
+                entity.Property(e => e.IsArchiv
+ed).HasDefaultValue(false);
                 entity.Property(e => e.CreatedAt).HasColumnType("timestamp");
+
+                entity.HasOne(e => e.BoardColumn)
+                    .WithMany()
+                    .HasForeignKey(e => e.BoardColumnId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
                 entity.HasOne(e => e.Performer)
                     .WithMany(e => e.AssignedTasks)
@@ -197,7 +201,7 @@ namespace TaskManagementMvc.Data
                 entity.Property(e => e.PerformerName).HasMaxLength(100);
                 entity.Property(e => e.GradeName).HasMaxLength(100);
                 entity.Property(e => e.HourlyRate).HasColumnType("decimal(18,2)");
-                entity.Property(e => e.Hours).HasDefaultValue(0);
+                entity.Property(e => e.CompletedEstimateHours).HasDefaultValue(0);
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
 
                 entity.HasOne(e => e.Invoice)
@@ -442,6 +446,18 @@ namespace TaskManagementMvc.Data
                     .WithMany()
                     .HasForeignKey(e => e.InvoiceId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // BoardColumn configuration
+            modelBuilder.Entity<BoardColumn>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

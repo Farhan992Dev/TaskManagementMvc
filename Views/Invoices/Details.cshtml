@@ -7,7 +7,7 @@
         .GroupBy(l => l.PerformerName)
         .Select(g => new {
             Performer = g.Key,
-            TotalHours = g.Sum(x => x.Hours),
+            TotalHours = g.Sum(x => x.CompletedEstimateHours),
             TotalAmount = g.Sum(x => x.Amount),
             GradeNames = string.Join(" / ", g.Select(x => x.GradeName).Where(x => !string.IsNullOrEmpty(x)).Distinct())
         })
@@ -109,7 +109,7 @@
                                 <td>@l.PerformerName</td>
                                 <td>@l.GradeName</td>
                                 <td class="text-end">@string.Format("{0:N0}", l.HourlyRate)</td>
-                                <td class="text-end">@l.Hours ساعت</td>
+                                <td class="text-end">@l.CompletedEstimateHours ساعت</td>
                                 <td class="text-end fw-semibold">@string.Format("{0:N0}", l.Amount)</td>
                             </tr>
                         }
@@ -145,7 +145,7 @@
                                     <div class="small text-muted">ایمیل: @performer.Email</div>
                                     <div class="small">کارت: <code>@(string.IsNullOrWhiteSpace(performer.CardNumber) ? "—" : performer.CardNumber)</code></div>
                                     <div class="small">شبا: <code>@(string.IsNullOrWhiteSpace(performer.IbanNumber) ? "—" : performer.IbanNumber)</code></div>
-                                    <div class="mt-auto small text-muted">ساعات در این فاکتور: @Model.Lines.Where(l => l.PerformerName == performer.FullName).Sum(l => l.Hours)</div>
+                                    <div class="mt-auto small text-muted">ساعات در این فاکتور: @Model.Lines.Where(l => l.PerformerName == performer.FullName).Sum(l => l.CompletedEstimateHours)</div>
                                 </div>
                             </div>
                         }

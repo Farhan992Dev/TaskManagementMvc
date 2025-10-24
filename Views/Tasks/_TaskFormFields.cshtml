@@ -76,12 +76,12 @@
                         <span asp-validation-for="OriginalEstimateHours" class="text-danger small"></span>
                     </div>
                     <div class="col-md-6">
-                        <label asp-for="Hours" class="form-label fw-semibold">ساعت ثبت‌شده</label>
+                        <label asp-for="CompletedEstimateHours" class="form-label fw-semibold">ساعت ثبت‌شده</label>
                         <div class="input-group">
-                            <input asp-for="Hours" class="form-control corp-input" type="number" min="0" step="0.25" placeholder="0.00" id="hoursInput" />
+                            <input asp-for="CompletedEstimateHours" class="form-control corp-input" type="number" min="0" step="0.25" placeholder="0.00" id="completedEstimateHoursInput" />
                             <span class="input-group-text">ساعت</span>
                         </div>
-                        <span asp-validation-for="Hours" class="text-danger small"></span>
+                        <span asp-validation-for="CompletedEstimateHours" class="text-danger small"></span>
                     </div>
                 </div>
                 <div class="mt-3" id="progressWrapper" style="display:none;">
@@ -150,7 +150,7 @@
         (function(){
             const prioritySelect = document.getElementById('prioritySelect');
             const priorityBadge = document.getElementById('priorityBadge');
-            const hoursInput = document.getElementById('hoursInput');
+            const completedEstimateHoursInput = document.getElementById('completedEstimateHoursInput');
             const estimateInput = document.getElementById('estimateInput');
             const progressWrapper = document.getElementById('progressWrapper');
             const hoursProgress = document.getElementById('hoursProgress');
@@ -173,8 +173,8 @@
             }
 
             function updateProgress(){
-                if(!hoursInput || !estimateInput) return;
-                const hours = parseFloat(hoursInput.value) || 0;
+                if(!completedEstimateHoursInput || !estimateInput) return;
+                const hours = parseFloat(completedEstimateHoursInput.value) || 0;
                 const estimate = parseFloat(estimateInput.value) || 0;
                 if(estimate > 0){
                     const percent = Math.min( (hours / estimate) * 100, 150); // cap visual at 150%
@@ -192,7 +192,7 @@
             }
 
             prioritySelect?.addEventListener('change', updatePriorityBadge);
-            hoursInput?.addEventListener('input', updateProgress);
+            completedEstimateHoursInput?.addEventListener('input', updateProgress);
             estimateInput?.addEventListener('input', updateProgress);
 
             // initial

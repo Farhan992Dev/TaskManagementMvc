@@ -12,7 +12,7 @@
         .GroupBy(l => l.TaskItem?.Performer?.FullName ?? l.PerformerName ?? "نامشخص")
         .Select(g => new {
             Name = g.Key,
-            Hours = g.Sum(x => x.Hours),
+            Hours = g.Sum(x => x.CompletedEstimateHours),
             Amount = g.Sum(x => x.Amount),
             Iban = g.Select(x => x.TaskItem?.Performer?.IbanNumber).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty,
             Card = g.Select(x => x.TaskItem?.Performer?.CardNumber).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty
@@ -79,7 +79,7 @@
     <ul style="padding:0 18px 0 0;margin:6px 0">
         @foreach (var l in Model.Lines)
         {
-            <li style="margin:3px 0">@l.Title : @l.Hours ساعت × @toman(l.HourlyRate) = <strong>@toman(l.Amount)</strong></li>
+            <li style="margin:3px 0">@l.Title : @l.CompletedEstimateHours ساعت × @toman(l.HourlyRate) = <strong>@toman(l.Amount)</strong></li>
         }
     </ul> *@
     <p style="margin-top:25px">با تشکر</p>

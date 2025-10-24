@@ -17,15 +17,12 @@ namespace TaskManagementMvc.Models
         [StringLength(1000, ErrorMessage = "توضیحات نمی‌تواند بیشتر از 1000 کاراکتر باشد")]
         public string? Description { get; set; }
 
-        [Display(Name = "وضعیت")]
-        public TaskStatus Status { get; set; } = TaskStatus.InProgress;
-
         [Display(Name = "اولویت")]
         public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
-        [Display(Name = "ساعت‌های کار")]
-        [Range(0, double.MaxValue, ErrorMessage = "ساعت‌های کار باید عدد مثبت باشد")]
-        public double Hours { get; set; }
+        [Display(Name = "ساعت تکمیل‌شده")]
+        [Range(0, double.MaxValue, ErrorMessage = "ساعت‌های تکمیل‌شده باید عدد مثبت باشد")]
+        public double CompletedEstimateHours { get; set; }
 
         [Display(Name = "تخمین اولیه (ساعت)")]
         [Range(0, double.MaxValue, ErrorMessage = "تخمین اولیه باید عدد مثبت باشد")]
@@ -54,8 +51,6 @@ namespace TaskManagementMvc.Models
         [Display(Name = "آرشیو شده توسط")]
         public string? ArchivedBy { get; set; }
 
-        public string? JuleSessionId { get; set; }
-
         // Foreign Keys
         [Display(Name = "انجام‌دهنده")]
         public int? PerformerId { get; set; }
@@ -70,6 +65,9 @@ namespace TaskManagementMvc.Models
         [Display(Name = "پروژه")]
         public int? ProjectId { get; set; }
 
+        [Display(Name = "ستون بورد")]
+        public int? BoardColumnId { get; set; }
+
         // Navigation Properties
         [ForeignKey("PerformerId")]
         public virtual ApplicationUser? Performer { get; set; }
@@ -83,22 +81,11 @@ namespace TaskManagementMvc.Models
         [ForeignKey("ProjectId")]
         public virtual Project? Project { get; set; }
 
+        [ForeignKey("BoardColumnId")]
+        public virtual BoardColumn? BoardColumn { get; set; }
+
         public virtual ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
         public virtual ICollection<TaskHistory> HistoryEntries { get; set; } = new List<TaskHistory>();
-    }
-
-    public enum TaskStatus
-    {
-        [Display(Name = "شروع نشده")]
-        NotStarted = 0,
-        [Display(Name = "در حال انجام")]
-        InProgress = 1,
-        [Display(Name = "تکمیل شده")]
-        Completed = 2,
-        [Display(Name = "صورتحساب شده")]
-        Invoiced = 3,
-        [Display(Name = "پرداخت شده")]
-        Paid = 4
     }
 
     public enum TaskPriority
